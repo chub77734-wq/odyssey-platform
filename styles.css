@@ -330,3 +330,117 @@ h1 span {
     font-size: clamp(3rem, 14vw, 5rem);
   }
 }
+/* Schedule section */
+
+.schedule-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.schedule-intro {
+  max-width: 780px;
+  margin-top: 24px;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.schedule-location {
+  margin-top: 32px;
+  padding: 24px;
+  border: 1px solid rgba(199, 166, 92, 0.4);
+  background: rgba(199, 166, 92, 0.06);
+}
+
+.schedule-location-label,
+.schedule-day,
+.schedule-time {
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.schedule-location-name {
+  margin-top: 8px;
+  color: var(--text);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.schedule-location-note {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.schedule-card {
+  min-height: 100%;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.01)
+    );
+}
+
+.schedule-card h3 {
+  margin-top: 14px;
+  color: var(--text);
+  font-size: 1.45rem;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.schedule-card .schedule-time {
+  margin-top: 16px;
+}
+
+.schedule-card p:not(.schedule-day):not(.schedule-time) {
+  margin-top: 18px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.schedule-note {
+  margin-top: 32px;
+  padding: 32px;
+  border-left: 3px solid var(--gold);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.schedule-note h3 {
+  color: var(--text);
+  font-size: 1.5rem;
+  text-transform: uppercase;
+}
+
+.schedule-note p {
+  max-width: 900px;
+  margin-top: 16px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+@media (max-width: 900px) {
+  .schedule-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-location,
+  .schedule-card,
+  .schedule-note {
+    padding: 22px;
+  }
+}
