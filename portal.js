@@ -56,3 +56,28 @@ profileForm.addEventListener("submit", async (event) => {
 
   alert("Your Odyssey athlete profile has been created.");
 });
+
+const loginForm = document.querySelector(".login-form");
+
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const formData = new FormData(loginForm);
+
+  const email = formData.get("email");
+  const password = formData.get("password");
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    console.error("Login error:", error);
+    alert("Sign in failed. Check the email and password.");
+    return;
+  }
+
+  alert("Signed in successfully.");
+  console.log("Signed in as:", data.user.email);
+});
