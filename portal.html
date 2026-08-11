@@ -10,13 +10,45 @@
 <body>
   <main class="portal-page">
     <section class="portal-card">
-      <p class="eyebrow">Odyssey Track Club</p>
-      <h1>Athlete Portal</h1>
-      <p>
-        Your Odyssey account has been approved.
-        Complete your account setup to access your athlete profile.
-      </p>
-    </section>
+  <p class="eyebrow">Odyssey Track Club</p>
+  <h1>Athlete Portal</h1>
+
+  <p>
+    Your Odyssey account has been approved.
+    Complete your account setup to access your athlete profile.
+  </p>
+
+  <form class="portal-form">
+    <label>
+      Full Name
+      <input type="text" name="full_name" required />
+    </label>
+
+    <label>
+      Age Group
+      <input type="text" name="age_group" />
+    </label>
+
+    <label>
+      Primary Event
+      <input type="text" name="primary_event" />
+    </label>
+
+    <label>
+      Goals
+      <textarea name="goals" rows="4"></textarea>
+    </label>
+
+    <button type="submit" class="button button-primary">
+      Complete Profile
+    </button>
+  </form>
+</section>
+
   </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="portal.js"></script>
+
 </body>
 </html>
