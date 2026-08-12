@@ -54,7 +54,7 @@ profileForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  alert("Your Odyssey athlete profile has been created.");
+  alert("Your Odyssey athlete profile has been saved.");
 });
 
 const loginForm = document.querySelector(".login-form");
