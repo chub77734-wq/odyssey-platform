@@ -16,6 +16,23 @@ async function checkSession() {
   }
 
   console.log("Signed in as:", data.session.user.email);
+  const { data: profile, error: profileError } = await supabaseClient
+  .from("athlete_profiles")
+  .select("full_name, age_group, primary_event, goals")
+  .eq("id", data.session.user.id)
+  .maybeSingle();
+
+if (profileError) {
+  console.error("Profile load error:", profileError);
+  return;
+}
+
+if (profile) {
+  document.querySelector('[name="full_name"]').value = profile.full_name || "";
+  document.querySelector('[name="age_group"]').value = profile.age_group || "";
+  document.querySelector('[name="primary_event"]').value = profile.primary_event || "";
+  document.querySelector('[name="goals"]').value = profile.goals || "";
+}
 }
 
 checkSession();
