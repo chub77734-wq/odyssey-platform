@@ -97,4 +97,5 @@ loginForm.addEventListener("submit", async (event) => {
 
   alert("Signed in successfully.");
   console.log("Signed in as:", data.user.email);
+  await checkSession();
 });
