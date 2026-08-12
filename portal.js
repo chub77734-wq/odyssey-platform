@@ -46,7 +46,7 @@ profileForm.addEventListener("submit", async (event) => {
 
   const { error } = await supabaseClient
     .from("athlete_profiles")
-    .insert(profile);
+    .upsert(profile, { onConflict: "id" });
 
   if (error) {
     console.error("Profile creation error:", error);
