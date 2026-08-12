@@ -12,8 +12,11 @@ async function checkSession() {
 
   if (!data.session) {
     console.log("No athlete is signed in yet.");
+    document.querySelector(".login-form").style.display = "block";
     return;
   }
+
+  document.querySelector(".login-form").style.display = "none";
 
   console.log("Signed in as:", data.session.user.email);
   const { data: profile, error: profileError } = await supabaseClient
