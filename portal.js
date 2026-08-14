@@ -102,3 +102,16 @@ loginForm.addEventListener("submit", async (event) => {
   console.log("Signed in as:", data.user.email);
   await checkSession();
 });
+const logoutButton = document.querySelector(".logout-button");
+
+logoutButton.addEventListener("click", async () => {
+  const { error } = await supabaseClient.auth.signOut();
+
+  if (error) {
+    console.error("Sign out error:", error);
+    alert("We couldn't sign you out yet.");
+    return;
+  }
+
+  await checkSession();
+});
