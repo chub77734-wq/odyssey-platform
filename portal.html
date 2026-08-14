@@ -10,62 +10,94 @@
 <body>
   <main class="portal-page">
     <section class="portal-card">
-  <p class="eyebrow">Odyssey Track Club</p>
-  <h1>Athlete Portal</h1>
+      <p class="eyebrow">Odyssey Track Club</p>
+      <h1>Athlete Portal</h1>
 
-  <p>
-    Your Odyssey account has been approved.
-    Complete your account setup to access your athlete profile.
-  </p>
-<form class="login-form">
-  <label>
-    Email
-    <input type="email" name="email" required />
-  </label>
+      <p class="portal-intro">
+        Sign in to access your Odyssey athlete profile. Invited athletes can
+        finish account setup from the link in their invitation email.
+      </p>
 
-  <label>
-    Password
-    <input type="password" name="password" required />
-  </label>
+      <p class="portal-status" role="status" aria-live="polite">
+        Checking your account…
+      </p>
 
-  <button type="submit" class="button button-primary">
-    Sign In
-  </button>
-</form>
-  <form class="portal-form">
-    <label>
-      Full Name
-      <input type="text" name="full_name" required />
-    </label>
+      <form class="login-form portal-form" hidden>
+        <label>
+          Email
+          <input type="email" name="email" autocomplete="email" required />
+        </label>
 
-    <label>
-      Age Group
-      <input type="text" name="age_group" />
-    </label>
+        <label>
+          Password
+          <input type="password" name="password" autocomplete="current-password" required />
+        </label>
 
-    <label>
-      Primary Event
-      <input type="text" name="primary_event" />
-    </label>
+        <button type="submit" class="button button-primary">Sign In</button>
+        <button type="button" class="portal-link forgot-password-button">
+          Forgot password?
+        </button>
+      </form>
 
-    <label>
-      Goals
-      <textarea name="goals" rows="4"></textarea>
-    </label>
+      <form class="forgot-password-form portal-form" hidden>
+        <label>
+          Email
+          <input type="email" name="email" autocomplete="email" required />
+        </label>
 
-    <button type="submit" class="button button-primary">
-      Complete Profile
-    </button>
-  </form>
-  <button type="button" class="button button-secondary logout-button">
-  Sign Out
-</button>
-</section>
+        <button type="submit" class="button button-primary">Send Reset Link</button>
+        <button type="button" class="portal-link back-to-login-button">
+          Back to sign in
+        </button>
+      </form>
 
+      <form class="password-form portal-form" hidden>
+        <h2>Set your password</h2>
+
+        <label>
+          New Password
+          <input type="password" name="password" autocomplete="new-password" minlength="8" required />
+        </label>
+
+        <label>
+          Confirm New Password
+          <input type="password" name="password_confirm" autocomplete="new-password" minlength="8" required />
+        </label>
+
+        <button type="submit" class="button button-primary">Save Password</button>
+      </form>
+
+      <form class="athlete-profile-form portal-form" hidden>
+        <label>
+          Full Name
+          <input type="text" name="full_name" autocomplete="name" required />
+        </label>
+
+        <label>
+          Age Group
+          <input type="text" name="age_group" />
+        </label>
+
+        <label>
+          Primary Event
+          <input type="text" name="primary_event" />
+        </label>
+
+        <label>
+          Goals
+          <textarea name="goals" rows="4"></textarea>
+        </label>
+
+        <button type="submit" class="button button-primary">Save Profile</button>
+      </form>
+
+      <button type="button" class="button button-secondary logout-button" hidden>
+        Sign Out
+      </button>
+    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="portal.js"></script>
-
+  <script src="portal.js"></script>
 </body>
 </html>

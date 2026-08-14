@@ -592,7 +592,7 @@ h1 span {
   margin-bottom: 20px;
 }
 
-.portal-form {
+.portal-form:not([hidden]) {
   display: grid;
   gap: 20px;
   margin-top: 32px;
@@ -616,4 +616,51 @@ h1 span {
 
 .portal-form textarea {
   resize: vertical;
+}
+
+.portal-form h2 {
+  font-size: 1.5rem;
+  text-transform: uppercase;
+}
+
+.portal-status {
+  min-height: 1.6em;
+  margin-top: 24px;
+  color: var(--muted);
+}
+
+.portal-status[data-type="error"] {
+  color: #ff9b9b;
+}
+
+.portal-status[data-type="success"] {
+  color: var(--gold);
+}
+
+.portal-link {
+  width: fit-content;
+  color: var(--gold);
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.portal-form :focus-visible,
+.logout-button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.portal-form :disabled,
+.logout-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.logout-button:not([hidden]) {
+  display: inline-flex;
+  margin-top: 20px;
 }
