@@ -19,6 +19,7 @@ async function checkSession() {
   }
 
   document.querySelector(".login-form").style.display = "none";
+  document.querySelector(".portal-form").style.display = "block";
   document.querySelector(".logout-button").style.display = "block";
 
 
