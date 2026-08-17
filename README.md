@@ -20,5 +20,19 @@ This is a responsive static launch site. No build tools are required.
 
 ## Scope
 
-This is the public marketing MVP. Athlete accounts, Stripe Billing, training plans,
-coach notes, video feedback, and analytics belong in the next product phase.
+The public marketing site and authenticated training portal live in this repository.
+The portal supports athlete profiles, coach-assigned workouts, private dialogue, and
+file attachments through Supabase.
+
+## Portal setup
+
+1. Open the Supabase SQL Editor for the project configured in `portal.js`.
+2. Review and run `supabase-setup.sql` once.
+3. In Supabase Authentication, create or invite the coach account.
+4. Confirm that `odysseytrackclub@gmail.com` exists as an Authentication user,
+   then run the final coach-registration statement.
+5. Invite athletes through Supabase Authentication. Each athlete completes their
+   profile after accepting the invitation.
+
+The `portal-files` bucket is private. Row-level security limits athletes to their
+own profile, workouts, messages, and file folder; coaches can manage every athlete.
