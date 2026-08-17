@@ -6,97 +6,88 @@
   <title>Odyssey Athlete Portal</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
   <main class="portal-page">
-    <section class="portal-card">
+    <section class="portal-card auth-card">
       <p class="eyebrow">Odyssey Track Club</p>
       <h1>Athlete Portal</h1>
-
-      <p class="portal-intro">
-        Sign in to access your Odyssey athlete profile. Invited athletes can
-        finish account setup from the link in their invitation email.
-      </p>
-
-      <p class="portal-status" role="status" aria-live="polite">
-        Checking your account…
-      </p>
+      <p class="portal-intro">Your training, coach feedback, and Odyssey conversations in one place. Invited athletes can finish setup from the link in their invitation email.</p>
+      <p class="portal-status" role="status" aria-live="polite">Checking your account…</p>
 
       <form class="login-form portal-form" hidden>
-        <label>
-          Email
-          <input type="email" name="email" autocomplete="email" required />
-        </label>
-
-        <label>
-          Password
-          <input type="password" name="password" autocomplete="current-password" required />
-        </label>
-
+        <label>Email <input type="email" name="email" autocomplete="email" required /></label>
+        <label>Password <input type="password" name="password" autocomplete="current-password" required /></label>
         <button type="submit" class="button button-primary">Sign In</button>
-        <button type="button" class="portal-link forgot-password-button">
-          Forgot password?
-        </button>
+        <button type="button" class="portal-link forgot-password-button">Forgot password?</button>
       </form>
-
       <form class="forgot-password-form portal-form" hidden>
-        <label>
-          Email
-          <input type="email" name="email" autocomplete="email" required />
-        </label>
-
+        <label>Email <input type="email" name="email" autocomplete="email" required /></label>
         <button type="submit" class="button button-primary">Send Reset Link</button>
-        <button type="button" class="portal-link back-to-login-button">
-          Back to sign in
-        </button>
+        <button type="button" class="portal-link back-to-login-button">Back to sign in</button>
       </form>
-
       <form class="password-form portal-form" hidden>
         <h2>Set your password</h2>
-
-        <label>
-          New Password
-          <input type="password" name="password" autocomplete="new-password" minlength="8" required />
-        </label>
-
-        <label>
-          Confirm New Password
-          <input type="password" name="password_confirm" autocomplete="new-password" minlength="8" required />
-        </label>
-
+        <label>New Password <input type="password" name="password" autocomplete="new-password" minlength="8" required /></label>
+        <label>Confirm New Password <input type="password" name="password_confirm" autocomplete="new-password" minlength="8" required /></label>
         <button type="submit" class="button button-primary">Save Password</button>
       </form>
+    </section>
 
-      <form class="athlete-profile-form portal-form" hidden>
-        <label>
-          Full Name
-          <input type="text" name="full_name" autocomplete="name" required />
-        </label>
+    <section class="portal-dashboard" hidden>
+      <header class="portal-dashboard-header">
+        <div><p class="eyebrow">Odyssey Track Club</p><h1>Training Portal</h1><p class="portal-welcome"></p></div>
+        <button type="button" class="button button-secondary logout-button">Sign Out</button>
+      </header>
+      <p class="dashboard-status portal-status" role="status" aria-live="polite"></p>
+      <div class="coach-athlete-picker" hidden>
+        <label for="athlete-select">Viewing athlete</label>
+        <select id="athlete-select"></select>
+      </div>
+      <nav class="portal-tabs" aria-label="Portal sections">
+        <button type="button" class="portal-tab is-active" data-panel="workouts-panel">Workouts</button>
+        <button type="button" class="portal-tab" data-panel="messages-panel">Coach Chat</button>
+        <button type="button" class="portal-tab" data-panel="profile-panel">Profile</button>
+      </nav>
 
-        <label>
-          Age Group
-          <input type="text" name="age_group" />
-        </label>
+      <section class="portal-panel" id="workouts-panel">
+        <div class="portal-panel-heading"><div><p class="section-kicker">Training plan</p><h2>Assigned Workouts</h2></div><p>Upcoming sessions and coaching notes.</p></div>
+        <form class="workout-form portal-form coach-only" hidden>
+          <h3>Assign a workout</h3>
+          <div class="portal-form-row">
+            <label>Date <input type="date" name="workout_date" required /></label>
+            <label>Title <input type="text" name="title" maxlength="120" required /></label>
+          </div>
+          <label>Workout details <textarea name="details" rows="6" maxlength="5000" required></textarea></label>
+          <button type="submit" class="button button-primary">Assign Workout</button>
+        </form>
+        <div class="workout-list portal-list" aria-live="polite"></div>
+      </section>
 
-        <label>
-          Primary Event
-          <input type="text" name="primary_event" />
-        </label>
+      <section class="portal-panel" id="messages-panel" hidden>
+        <div class="portal-panel-heading"><div><p class="section-kicker">Direct line</p><h2>Coach Chat</h2></div><p>Share updates, questions, documents, photos, or videos.</p></div>
+        <div class="message-list" aria-live="polite"></div>
+        <form class="message-form portal-form">
+          <label for="message-body">Message</label>
+          <textarea id="message-body" name="body" rows="4" maxlength="4000" placeholder="Write an update or question…"></textarea>
+          <label class="file-field">Add a file <span>PDF, Word, JPG, PNG, WebP, MP4, or MOV — maximum 20 MB</span><input type="file" name="attachment" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.mp4,.mov" /></label>
+          <button type="submit" class="button button-primary">Send Message</button>
+        </form>
+      </section>
 
-        <label>
-          Goals
-          <textarea name="goals" rows="4"></textarea>
-        </label>
-
-        <button type="submit" class="button button-primary">Save Profile</button>
-      </form>
-
-      <button type="button" class="button button-secondary logout-button" hidden>
-        Sign Out
-      </button>
+      <section class="portal-panel" id="profile-panel" hidden>
+        <div class="portal-panel-heading"><div><p class="section-kicker">Athlete details</p><h2>Profile</h2></div><p>Keep training information current for better coaching.</p></div>
+        <form class="athlete-profile-form portal-form">
+          <label>Full Name <input type="text" name="full_name" autocomplete="name" required /></label>
+          <div class="portal-form-row">
+            <label>Age Group <input type="text" name="age_group" /></label>
+            <label>Primary Event <input type="text" name="primary_event" /></label>
+          </div>
+          <label>Goals <textarea name="goals" rows="5"></textarea></label>
+          <button type="submit" class="button button-primary">Save Profile</button>
+        </form>
+      </section>
     </section>
   </main>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="portal.js"></script>
 </body>

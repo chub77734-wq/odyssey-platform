@@ -1,0 +1,12 @@
+# macOS metadata
+.DS_Store
+
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+
+# Editor and temporary files
+*.swp
+*.tmp
+work/
