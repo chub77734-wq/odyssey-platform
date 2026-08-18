@@ -16,6 +16,8 @@ const athletePicker = document.querySelector(".coach-athlete-picker");
 const athleteSelect = document.querySelector("#athlete-select");
 const workoutList = document.querySelector(".workout-list");
 const messageList = document.querySelector(".message-list");
+const messageComposeButton = document.querySelector(".message-compose-button");
+const userGreeting = document.querySelector(".user-greeting");
 const authForms = [loginForm, forgotForm, passwordForm];
 const hashParams = new URLSearchParams(window.location.hash.slice(1));
 const authFlowType = hashParams.get("type");
@@ -47,6 +49,23 @@ function escapeHtml(value = "") {
   return element.innerHTML;
 }
 
+function firstNameFrom(value = "") {
+  return value.trim().split(/\s+/)[0] || "Athlete";
+}
+
+function accountDisplayName() {
+  const metadata = session?.user?.user_metadata || {};
+  const metadataName = metadata.first_name || metadata.full_name || metadata.name;
+  if (metadataName) return firstNameFrom(metadataName);
+
+  const emailName = session?.user?.email?.split("@")[0].split(/[._-]/)[0] || "Athlete";
+  return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+}
+
+function setUserGreeting(name) {
+  userGreeting.textContent = `Hi, ${firstNameFrom(name || accountDisplayName())}`;
+}
+
 function formatDate(value, withTime = false) {
   const date = new Date(withTime ? value : `${value}T12:00:00`);
   const options = withTime
@@ -72,6 +91,7 @@ async function loadProfile() {
   profileForm.elements.age_group.value = data?.age_group || "";
   profileForm.elements.primary_event.value = data?.primary_event || "";
   profileForm.elements.goals.value = data?.goals || "";
+  if (!isCoach) setUserGreeting(data?.full_name);
   document.querySelector(".portal-welcome").textContent = isCoach
     ? "Coach workspace — assign training and stay connected."
     : `Welcome${data?.full_name ? `, ${data.full_name}` : ""}. Here is your Odyssey training space.`;
@@ -144,6 +164,7 @@ async function refreshWorkspace() {
 
 async function showDashboard(activeSession, version) {
   session = activeSession;
+  setUserGreeting();
   const { data: coachResult, error } = await supabaseClient.rpc("is_coach");
   if (version !== authStateVersion) return;
   if (error) {
@@ -262,6 +283,7 @@ profileForm.addEventListener("submit", async (event) => {
   }, { onConflict: "id" });
   setFormBusy(profileForm, false);
   setStatus(dashboardStatus, error ? "We couldn't save your profile." : "Your profile has been saved.", error ? "error" : "success");
+  if (!error) setUserGreeting(form.get("full_name"));
 });
 
 workoutForm.addEventListener("submit", async (event) => {
@@ -303,6 +325,17 @@ messageForm.addEventListener("submit", async (event) => {
   setFormBusy(messageForm, false);
   if (error) setStatus(dashboardStatus, "The message could not be sent.", "error");
   else { messageForm.reset(); setStatus(dashboardStatus, "Message sent.", "success"); await loadMessages(); }
+});
+
+messageComposeButton.addEventListener("click", () => {
+  messageForm.scrollIntoView({ behavior: "smooth", block: "center" });
+  window.setTimeout(() => messageForm.elements.body.focus(), 350);
+});
+
+messageForm.elements.body.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+  event.preventDefault();
+  messageForm.requestSubmit();
 });
 
 athleteSelect.addEventListener("change", async () => {

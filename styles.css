@@ -214,6 +214,7 @@ h1 span {
 
 .button-secondary {
   background: transparent;
+  color: var(--text);
 }
 
 .button-secondary:hover {
@@ -689,9 +690,33 @@ h1 span {
   font-size: clamp(3.2rem, 8vw, 7rem);
 }
 
-.portal-dashboard-header .logout-button {
+.portal-header-actions {
+  display: flex;
   flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.portal-header-actions .button {
+  width: auto;
+  min-height: 48px;
+  padding-inline: 20px;
+}
+
+.portal-header-actions .logout-button {
   margin-top: 0;
+}
+
+.user-greeting {
+  flex-basis: 100%;
+  color: var(--gold);
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: right;
+  text-transform: uppercase;
 }
 
 .portal-welcome,
@@ -770,6 +795,35 @@ h1 span {
   font-size: clamp(2.4rem, 5vw, 4.8rem);
   line-height: 0.95;
   text-transform: uppercase;
+}
+
+.message-heading-actions {
+  display: grid;
+  justify-items: end;
+  gap: 14px;
+  max-width: 460px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.message-compose-button {
+  width: auto;
+  min-height: 48px;
+}
+
+.message-form {
+  scroll-margin-block: 24px;
+}
+
+.message-composer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.message-composer-row .button {
+  align-self: stretch;
 }
 
 .portal-form-row {
@@ -882,8 +936,30 @@ h1 span {
     display: grid;
   }
 
-  .portal-dashboard-header .logout-button {
+  .portal-header-actions {
+    display: grid;
+    justify-content: stretch;
+  }
+
+  .portal-header-actions .button {
     width: 100%;
+  }
+
+  .user-greeting {
+    text-align: left;
+  }
+
+  .message-heading-actions {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .message-compose-button {
+    width: 100%;
+  }
+
+  .message-composer-row {
+    grid-template-columns: 1fr;
   }
 
   .coach-athlete-picker,
