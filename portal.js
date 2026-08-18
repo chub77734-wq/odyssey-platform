@@ -18,15 +18,33 @@ const workoutList = document.querySelector(".workout-list");
 const messageList = document.querySelector(".message-list");
 const messageComposeButton = document.querySelector(".message-compose-button");
 const userGreeting = document.querySelector(".user-greeting");
+const billingStatus = document.querySelector(".billing-status");
+const billingDetail = document.querySelector(".billing-detail");
+const billingActions = document.querySelector(".billing-actions");
+const billingAccessMessage = document.querySelector(".billing-access-message");
+const billingAccessForm = document.querySelector(".billing-access-form");
+const manualApprovalCheckbox = billingAccessForm.elements.manual_approval;
+const manualApprovalNote = document.querySelector(".manual-approval-note");
+const billingEnabledCheckbox = billingAccessForm.elements.billing_enabled;
+const draftInvoiceForm = document.querySelector(".draft-invoice-form");
+const sendInvoiceForm = document.querySelector(".send-invoice-form");
+const invoiceList = document.querySelector(".invoice-list");
+const startMembershipButton = document.querySelector(".start-membership-button");
+const manageBillingButton = document.querySelector(".manage-billing-button");
 const authForms = [loginForm, forgotForm, passwordForm];
 const hashParams = new URLSearchParams(window.location.hash.slice(1));
 const authFlowType = hashParams.get("type");
 const authLinkError = hashParams.get("error_description");
+const billingReturn = new URLSearchParams(window.location.search).get("billing");
 let needsPasswordUpdate = authFlowType === "invite" || authFlowType === "recovery";
 let authStateVersion = 0;
 let session = null;
 let selectedAthleteId = null;
 let isCoach = false;
+let isGuardian = false;
+let billingRecord = null;
+let billingAllowed = false;
+let draftInvoiceRequestId = null;
 
 function setStatus(target, message, type = "info") {
   target.textContent = message;
@@ -37,6 +55,17 @@ function showAuthView(view) {
   authForms.forEach((form) => { form.hidden = form !== view; });
   authCard.hidden = false;
   dashboard.hidden = true;
+}
+
+function resetPortalRoleView() {
+  document.querySelector(".portal-dashboard-header h1").textContent = "Training Portal";
+  document.querySelectorAll(".training-only").forEach((element) => { element.hidden = false; });
+  document.querySelectorAll(".portal-tab").forEach((tab) => {
+    tab.classList.toggle("is-active", tab.dataset.panel === "workouts-panel");
+  });
+  document.querySelectorAll(".portal-panel").forEach((panel) => {
+    panel.hidden = panel.id !== "workouts-panel";
+  });
 }
 
 function setFormBusy(form, busy) {
@@ -74,6 +103,138 @@ function formatDate(value, withTime = false) {
   return new Intl.DateTimeFormat("en-US", options).format(date);
 }
 
+function formatBillingStatus(status) {
+  const labels = {
+    active: "Active", trialing: "Trial", past_due: "Past due", unpaid: "Unpaid",
+    paused: "Paused", canceled: "Canceled", incomplete: "Payment incomplete",
+    incomplete_expired: "Not active"
+  };
+  return labels[status] || "Not started";
+}
+
+function isUnder18(dateOfBirth) {
+  if (!dateOfBirth) return null;
+  const dob = new Date(`${dateOfBirth}T00:00:00Z`);
+  const today = new Date();
+  let age = today.getUTCFullYear() - dob.getUTCFullYear();
+  if (today.getUTCMonth() < dob.getUTCMonth() ||
+    (today.getUTCMonth() === dob.getUTCMonth() && today.getUTCDate() < dob.getUTCDate())) age -= 1;
+  return age < 18;
+}
+
+function renderBillingActions() {
+  const status = billingRecord?.subscription_status || null;
+  const hasCustomer = Boolean(billingRecord);
+  const canStart = !status || ["canceled", "incomplete_expired"].includes(status);
+  billingActions.hidden = isCoach || !billingAllowed;
+  startMembershipButton.hidden = isCoach || !billingAllowed || !canStart;
+  manageBillingButton.hidden = isCoach || !billingAllowed || !hasCustomer;
+}
+
+async function loadBilling() {
+  if (!selectedAthleteId) {
+    billingStatus.textContent = "No athlete selected";
+    billingDetail.textContent = "Select an athlete to view membership status.";
+    startMembershipButton.hidden = true;
+    manageBillingButton.hidden = true;
+    return;
+  }
+  const { data, error } = await supabaseClient.from("billing_accounts")
+    .select("subscription_status, current_period_end, cancel_at_period_end, scheduled_cancel_at")
+    .eq("athlete_id", selectedAthleteId).maybeSingle();
+  if (error) throw error;
+  billingRecord = data;
+  const status = billingRecord?.subscription_status || null;
+  billingStatus.textContent = formatBillingStatus(status);
+  billingStatus.dataset.status = status || "not_started";
+  const billingDate = data?.scheduled_cancel_at || data?.current_period_end;
+  if (billingDate) {
+    billingDetail.textContent = `${data.cancel_at_period_end ? "Access ends" : "Current period renews"} ${formatDate(billingDate, true)}.`;
+  } else {
+    billingDetail.textContent = isCoach
+      ? "This athlete has not started a membership."
+      : "Start your membership when you are ready.";
+  }
+  renderBillingActions();
+}
+
+async function loadBillingAccess() {
+  if (!selectedAthleteId) return;
+  const { data: authorization, error: authorizationError } = await supabaseClient
+    .from("athlete_billing_authorizations")
+    .select("athlete_id, athlete_display_name, guardian_configured, minor_self_billing_approved, billing_enabled")
+    .eq("athlete_id", selectedAthleteId).maybeSingle();
+  if (authorizationError) throw authorizationError;
+
+  if (isGuardian) {
+    billingAllowed = Boolean(authorization?.billing_enabled);
+    billingAccessMessage.textContent = billingAllowed
+      ? "You are signed in with the linked parent or guardian billing account. Billing is enabled."
+      : "You are signed in with the linked parent or guardian account, but billing is not enabled.";
+    billingAccessForm.hidden = true;
+    renderBillingActions();
+    return;
+  }
+
+  const { data: athlete, error: athleteError } = await supabaseClient.from("athlete_profiles")
+    .select("date_of_birth").eq("id", selectedAthleteId).maybeSingle();
+  if (athleteError) throw athleteError;
+  const minor = isUnder18(athlete?.date_of_birth);
+
+  if (isCoach) {
+    billingAllowed = false;
+    billingAccessForm.hidden = false;
+    billingAccessForm.elements.date_of_birth.value = athlete?.date_of_birth || "";
+    billingAccessForm.elements.guardian_email.value = "";
+    manualApprovalCheckbox.checked = Boolean(authorization?.minor_self_billing_approved);
+    billingEnabledCheckbox.checked = Boolean(authorization?.billing_enabled);
+    billingAccessForm.elements.approval_note.value = "";
+    manualApprovalNote.hidden = !manualApprovalCheckbox.checked;
+    billingAccessForm.elements.approval_note.required = manualApprovalCheckbox.checked;
+    billingAccessMessage.textContent = !authorization?.billing_enabled
+      ? "Discretionary billing is OFF for this athlete."
+      : !athlete?.date_of_birth
+      ? "Billing is blocked until a coach verifies date of birth."
+      : minor && !authorization?.minor_self_billing_approved
+        ? authorization?.guardian_configured
+          ? "Minor billing requires the linked guardian's credentials."
+          : "Minor billing is blocked until a guardian is linked or a manual exception is approved."
+        : minor ? "This minor has a documented manual self-billing exception." : "This athlete is currently 18 or older.";
+  } else {
+    billingAccessForm.hidden = true;
+    billingAllowed = Boolean(authorization?.billing_enabled) && Boolean(athlete?.date_of_birth) &&
+      (minor === false || Boolean(authorization?.minor_self_billing_approved));
+    billingAccessMessage.textContent = !authorization?.billing_enabled
+      ? "Billing is not currently enabled for this athlete."
+      : !athlete?.date_of_birth
+      ? "Billing is unavailable until a coach verifies your date of birth."
+      : minor && !authorization?.minor_self_billing_approved
+        ? "A parent or guardian must sign in with their linked billing account."
+        : minor ? "Odyssey has approved a documented exception for billing with this athlete account." : "You may manage billing with this account.";
+  }
+  renderBillingActions();
+}
+
+async function loadInvoices() {
+  if (!selectedAthleteId) {
+    invoiceList.innerHTML = '<p class="empty-state">No athlete selected.</p>';
+    return;
+  }
+  const { data, error } = await supabaseClient.from("billing_invoices")
+    .select("stripe_invoice_id, amount_cents, currency, description, due_date, status, hosted_invoice_url, invoice_pdf, sent_at, created_at")
+    .eq("athlete_id", selectedAthleteId).order("created_at", { ascending: false });
+  if (error) throw error;
+  invoiceList.innerHTML = data.length ? data.map((invoice) => {
+    const amount = new Intl.NumberFormat("en-US", { style: "currency", currency: invoice.currency.toUpperCase() })
+      .format(invoice.amount_cents / 100);
+    const links = [
+      invoice.hosted_invoice_url ? `<a href="${escapeHtml(invoice.hosted_invoice_url)}" target="_blank" rel="noopener">Open invoice</a>` : "",
+      invoice.invoice_pdf ? `<a href="${escapeHtml(invoice.invoice_pdf)}" target="_blank" rel="noopener">PDF</a>` : ""
+    ].filter(Boolean).join(" · ");
+    return `<article class="invoice-item"><div><p class="invoice-status">${escapeHtml(invoice.status)}</p><h4>${escapeHtml(invoice.description)}</h4><p>${amount} · Due ${formatDate(invoice.due_date)}</p></div><div><code>${escapeHtml(invoice.stripe_invoice_id)}</code>${links ? `<p>${links}</p>` : ""}</div></article>`;
+  }).join("") : '<p class="empty-state">No one-off invoices.</p>';
+}
+
 function showSignedOut(message = "Sign in to access your training portal.", type = "info") {
   needsPasswordUpdate = false;
   session = null;
@@ -105,6 +266,18 @@ async function loadAthletes() {
     : '<option value="">No athletes yet</option>';
   selectedAthleteId = data[0]?.id || null;
   athleteSelect.value = selectedAthleteId || "";
+}
+
+async function loadGuardianAthletes() {
+  const { data, error } = await supabaseClient.from("athlete_billing_authorizations")
+    .select("athlete_id, athlete_display_name").order("athlete_display_name");
+  if (error) throw error;
+  athleteSelect.innerHTML = data.map((athlete) =>
+    `<option value="${athlete.athlete_id}">${escapeHtml(athlete.athlete_display_name)}</option>`).join("");
+  selectedAthleteId = data[0]?.athlete_id || null;
+  athleteSelect.value = selectedAthleteId || "";
+  athletePicker.hidden = data.length <= 1;
+  athletePicker.querySelector("label").textContent = "Managing membership for";
 }
 
 async function loadWorkouts() {
@@ -154,11 +327,32 @@ async function loadMessages() {
 async function refreshWorkspace() {
   setStatus(dashboardStatus, "Loading athlete workspace…");
   try {
-    await Promise.all([loadProfile(), loadWorkouts(), loadMessages()]);
+    const loaders = isGuardian
+      ? [loadBilling(), loadBillingAccess(), loadInvoices()]
+      : [loadProfile(), loadWorkouts(), loadMessages(), loadBilling(), loadBillingAccess(), loadInvoices()];
+    await Promise.all(loaders);
     setStatus(dashboardStatus, "Workspace is up to date.", "success");
   } catch (error) {
     console.error("Workspace load error:", error);
     setStatus(dashboardStatus, "We couldn't load portal data. Confirm the Supabase setup has been applied.", "error");
+  }
+}
+
+async function openStripeSession(functionName, button, loadingMessage) {
+  if (!session || isCoach) return;
+  button.disabled = true;
+  setStatus(dashboardStatus, loadingMessage);
+  try {
+    const { data, error } = await supabaseClient.functions.invoke(functionName, {
+      body: { athleteId: selectedAthleteId }
+    });
+    if (error) throw error;
+    if (!data?.url) throw new Error("Stripe did not return a redirect URL.");
+    window.location.assign(data.url);
+  } catch (error) {
+    console.error(`${functionName} error:`, error);
+    setStatus(dashboardStatus, "We couldn't open secure billing. Please try again or contact Odyssey.", "error");
+    button.disabled = false;
   }
 }
 
@@ -174,17 +368,52 @@ async function showDashboard(activeSession, version) {
     return;
   }
   isCoach = Boolean(coachResult);
+  isGuardian = false;
+  resetPortalRoleView();
   authCard.hidden = true;
   dashboard.hidden = false;
   athletePicker.hidden = !isCoach;
   workoutForm.hidden = !isCoach;
+  billingAccessForm.hidden = !isCoach;
+  draftInvoiceForm.hidden = !isCoach;
+  sendInvoiceForm.hidden = !isCoach;
   profileForm.querySelector("button[type='submit']").hidden = isCoach;
   Array.from(profileForm.elements).forEach((control) => {
     if (control.tagName !== "BUTTON") control.disabled = isCoach;
   });
-  if (isCoach) await loadAthletes();
-  else selectedAthleteId = activeSession.user.id;
+  if (isCoach) {
+    athletePicker.querySelector("label").textContent = "Viewing athlete";
+    await loadAthletes();
+  } else {
+    const { data: ownProfile, error: profileError } = await supabaseClient.from("athlete_profiles")
+      .select("id").eq("id", activeSession.user.id).maybeSingle();
+    if (profileError) throw profileError;
+    if (ownProfile) selectedAthleteId = activeSession.user.id;
+    else {
+      const { data: guardianLinks, error: guardianError } = await supabaseClient
+        .from("athlete_billing_authorizations").select("athlete_id");
+      if (guardianError) throw guardianError;
+      if (!guardianLinks.length) {
+        showAuthView(loginForm);
+        setStatus(authStatus, "This account has not been linked to an athlete or guardian billing role.", "error");
+        return;
+      }
+      isGuardian = true;
+      document.querySelectorAll(".training-only").forEach((element) => { element.hidden = true; });
+      document.querySelectorAll(".portal-tab").forEach((tab) => tab.classList.remove("is-active"));
+      document.querySelector("[data-panel='billing-panel']").classList.add("is-active");
+      document.querySelector("#billing-panel").hidden = false;
+      document.querySelector(".portal-dashboard-header h1").textContent = "Billing Portal";
+      document.querySelector(".portal-welcome").textContent = "Parent and guardian membership billing.";
+      await loadGuardianAthletes();
+    }
+  }
   await refreshWorkspace();
+  if (billingReturn === "success" || billingReturn === "canceled") {
+    setStatus(dashboardStatus, billingReturn === "success"
+      ? "Checkout complete. Membership status may take a few seconds to update."
+      : "Checkout canceled. No payment was made.", billingReturn === "success" ? "success" : "info");
+  }
 }
 
 async function applyAuthState(activeSession) {
@@ -340,6 +569,7 @@ messageForm.elements.body.addEventListener("keydown", (event) => {
 
 athleteSelect.addEventListener("change", async () => {
   selectedAthleteId = athleteSelect.value || null;
+  draftInvoiceRequestId = null;
   await refreshWorkspace();
 });
 document.querySelectorAll(".portal-tab").forEach((tab) => tab.addEventListener("click", () => {
@@ -350,3 +580,106 @@ document.querySelector(".logout-button").addEventListener("click", async () => {
   const { error } = await supabaseClient.auth.signOut();
   if (error) setStatus(dashboardStatus, "We couldn't sign you out.", "error");
 });
+
+startMembershipButton.addEventListener("click", () => {
+  openStripeSession("create-checkout-session", startMembershipButton, "Opening secure checkout…");
+});
+manageBillingButton.addEventListener("click", () => {
+  openStripeSession("create-customer-portal-session", manageBillingButton, "Opening secure billing…");
+});
+
+manualApprovalCheckbox.addEventListener("change", () => {
+  manualApprovalNote.hidden = !manualApprovalCheckbox.checked;
+  billingAccessForm.elements.approval_note.required = manualApprovalCheckbox.checked;
+});
+
+billingAccessForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!isCoach || !selectedAthleteId) return;
+  setFormBusy(billingAccessForm, true);
+  setStatus(dashboardStatus, "Saving billing authorization…");
+  const { data, error } = await supabaseClient.functions.invoke("configure-billing-authorization", {
+    body: {
+      athleteId: selectedAthleteId,
+      dateOfBirth: billingAccessForm.elements.date_of_birth.value,
+      guardianEmail: billingAccessForm.elements.guardian_email.value,
+      manualApproved: manualApprovalCheckbox.checked,
+      approvalNote: billingAccessForm.elements.approval_note.value,
+      billingEnabled: billingEnabledCheckbox.checked,
+      billingEnabledNote: billingAccessForm.elements.billing_enabled_note.value
+    }
+  });
+  setFormBusy(billingAccessForm, false);
+  if (error) {
+    let message = "We couldn't save billing authorization.";
+    try { message = (await error.context?.json())?.error || message; } catch (_) { /* Keep safe fallback. */ }
+    setStatus(dashboardStatus, message, "error");
+    return;
+  }
+  billingAccessForm.elements.guardian_email.value = "";
+  setStatus(dashboardStatus, data?.requiresBillingMigration
+    ? "Authorization saved. Existing Stripe billing must be transferred manually before the new billing user can manage it."
+    : data?.minor ? "Minor billing authorization saved." : "Adult billing authorization saved.",
+  data?.requiresBillingMigration ? "error" : "success");
+  await loadBillingAccess();
+});
+
+draftInvoiceForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!isCoach || !selectedAthleteId) return;
+  const dollars = Number(draftInvoiceForm.elements.amount.value);
+  const amountCents = Math.round(dollars * 100);
+  if (!Number.isFinite(dollars) || Math.abs(amountCents / 100 - dollars) > 0.00001) {
+    return setStatus(dashboardStatus, "Enter a valid USD amount with no more than two decimal places.", "error");
+  }
+  setFormBusy(draftInvoiceForm, true);
+  setStatus(dashboardStatus, "Creating Stripe draft only…");
+  draftInvoiceRequestId ||= crypto.randomUUID();
+  const { data, error } = await supabaseClient.functions.invoke("create-draft-invoice", { body: {
+    athleteId: selectedAthleteId,
+    amountCents,
+    description: draftInvoiceForm.elements.description.value,
+    dueDate: draftInvoiceForm.elements.due_date.value,
+    requestId: draftInvoiceRequestId
+  } });
+  setFormBusy(draftInvoiceForm, false);
+  if (error) {
+    let message = "We couldn't create the draft invoice.";
+    try { message = (await error.context?.json())?.error || message; } catch (_) { /* Keep fallback. */ }
+    return setStatus(dashboardStatus, message, "error");
+  }
+  draftInvoiceRequestId = null;
+  draftInvoiceForm.reset();
+  sendInvoiceForm.elements.invoice_id.value = data.invoiceId;
+  setStatus(dashboardStatus, `Draft ${data.invoiceId} created. Review it before finalizing.`, "success");
+  await loadInvoices();
+});
+
+sendInvoiceForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!isCoach) return;
+  const invoiceId = sendInvoiceForm.elements.invoice_id.value.trim();
+  const confirmation = sendInvoiceForm.elements.confirmation.value.trim();
+  if (confirmation !== "FINALIZE_AND_SEND") {
+    return setStatus(dashboardStatus, "Type FINALIZE_AND_SEND exactly to confirm.", "error");
+  }
+  setFormBusy(sendInvoiceForm, true);
+  setStatus(dashboardStatus, `Finalizing and sending ${invoiceId}…`);
+  const { error } = await supabaseClient.functions.invoke("finalize-send-invoice", { body: {
+    invoiceId,
+    confirmation: { invoiceId, action: confirmation }
+  } });
+  setFormBusy(sendInvoiceForm, false);
+  if (error) {
+    let message = "We couldn't finalize and send that invoice.";
+    try { message = (await error.context?.json())?.error || message; } catch (_) { /* Keep fallback. */ }
+    return setStatus(dashboardStatus, message, "error");
+  }
+  sendInvoiceForm.reset();
+  setStatus(dashboardStatus, `${invoiceId} was finalized and sent.`, "success");
+  await loadInvoices();
+});
+
+if (billingReturn === "success" || billingReturn === "canceled") {
+  window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+}

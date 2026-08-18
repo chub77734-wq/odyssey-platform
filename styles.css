@@ -921,6 +921,138 @@ h1 span {
   border: 1px dashed var(--border);
 }
 
+.billing-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin-top: 28px;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+}
+
+.billing-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.billing-status {
+  margin-top: 6px;
+  color: var(--gold);
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.billing-status[data-status="past_due"],
+.billing-status[data-status="unpaid"],
+.billing-status[data-status="incomplete"] {
+  color: #ff9b9b;
+}
+
+.billing-detail,
+.billing-note {
+  color: var(--muted);
+}
+
+.billing-detail {
+  margin-top: 4px;
+}
+
+.billing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.billing-note {
+  margin-top: 18px;
+  font-size: 0.9rem;
+}
+
+.billing-access-message {
+  margin-top: 18px;
+  padding: 14px 16px;
+  color: var(--muted);
+  background: rgba(201, 168, 94, 0.08);
+  border: 1px solid rgba(201, 168, 94, 0.25);
+}
+
+.billing-access-form {
+  margin-top: 24px;
+  padding: 26px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border);
+}
+
+.billing-form-help,
+.billing-access-form label span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 400;
+}
+
+.billing-access-form .checkbox-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.billing-access-form .checkbox-field input {
+  width: auto;
+  margin-top: 0.35em;
+}
+
+.invoice-section {
+  margin-top: 34px;
+  padding-top: 30px;
+  border-top: 1px solid var(--border);
+}
+
+.invoice-section-heading p,
+.invoice-item p {
+  color: var(--muted);
+}
+
+.draft-invoice-form,
+.send-invoice-form {
+  padding: 26px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border);
+}
+
+.invoice-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px;
+  border: 1px solid var(--border);
+}
+
+.invoice-item h4 {
+  margin: 4px 0;
+  font-size: 1.15rem;
+}
+
+.invoice-item code,
+.invoice-item a,
+.invoice-status {
+  color: var(--gold);
+}
+
+.invoice-status {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 760px) {
   .portal-page {
     padding: 24px 14px;
@@ -965,6 +1097,19 @@ h1 span {
   .coach-athlete-picker,
   .portal-form-row {
     grid-template-columns: 1fr;
+  }
+
+  .billing-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .billing-actions {
+    justify-content: flex-start;
+  }
+
+  .invoice-item {
+    flex-direction: column;
   }
 
   .portal-tabs {

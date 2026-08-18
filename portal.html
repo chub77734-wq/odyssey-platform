@@ -48,12 +48,13 @@
         <select id="athlete-select"></select>
       </div>
       <nav class="portal-tabs" aria-label="Portal sections">
-        <button type="button" class="portal-tab is-active" data-panel="workouts-panel">Workouts</button>
-        <button type="button" class="portal-tab" data-panel="messages-panel">Coach Chat</button>
-        <button type="button" class="portal-tab" data-panel="profile-panel">Profile</button>
+        <button type="button" class="portal-tab training-only is-active" data-panel="workouts-panel">Workouts</button>
+        <button type="button" class="portal-tab training-only" data-panel="messages-panel">Coach Chat</button>
+        <button type="button" class="portal-tab training-only" data-panel="profile-panel">Profile</button>
+        <button type="button" class="portal-tab" data-panel="billing-panel">Billing</button>
       </nav>
 
-      <section class="portal-panel" id="workouts-panel">
+      <section class="portal-panel training-only" id="workouts-panel">
         <div class="portal-panel-heading"><div><p class="section-kicker">Training plan</p><h2>Assigned Workouts</h2></div><p>Upcoming sessions and coaching notes.</p></div>
         <form class="workout-form portal-form coach-only" hidden>
           <h3>Assign a workout</h3>
@@ -67,7 +68,7 @@
         <div class="workout-list portal-list" aria-live="polite"></div>
       </section>
 
-      <section class="portal-panel" id="messages-panel" hidden>
+      <section class="portal-panel training-only" id="messages-panel" hidden>
         <div class="portal-panel-heading">
           <div><p class="section-kicker">Direct line</p><h2>Coach Chat</h2></div>
           <div class="message-heading-actions">
@@ -86,7 +87,7 @@
         <div class="message-list" aria-live="polite"></div>
       </section>
 
-      <section class="portal-panel" id="profile-panel" hidden>
+      <section class="portal-panel training-only" id="profile-panel" hidden>
         <div class="portal-panel-heading"><div><p class="section-kicker">Athlete details</p><h2>Profile</h2></div><p>Keep training information current for better coaching.</p></div>
         <form class="athlete-profile-form portal-form">
           <label>Full Name <input type="text" name="full_name" autocomplete="name" required /></label>
@@ -97,6 +98,50 @@
           <label>Goals <textarea name="goals" rows="5"></textarea></label>
           <button type="submit" class="button button-primary">Save Profile</button>
         </form>
+      </section>
+
+      <section class="portal-panel" id="billing-panel" hidden>
+        <div class="portal-panel-heading"><div><p class="section-kicker">Membership</p><h2>Billing</h2></div><p>Secure payments and invoices are handled by Stripe.</p></div>
+        <div class="billing-card" aria-live="polite">
+          <div>
+            <p class="billing-label">Membership status</p>
+            <p class="billing-status">Loading…</p>
+            <p class="billing-detail"></p>
+          </div>
+          <div class="billing-actions athlete-only">
+            <button type="button" class="button button-primary start-membership-button" hidden>Start Membership</button>
+            <button type="button" class="button button-secondary manage-billing-button" hidden>Manage Billing</button>
+          </div>
+        </div>
+        <p class="billing-access-message"></p>
+        <form class="billing-access-form portal-form coach-only" hidden>
+          <h3>Billing authorization</h3>
+          <p class="billing-form-help">Date of birth is coach-controlled and determines whether guardian credentials are required.</p>
+          <label>Date of Birth <input type="date" name="date_of_birth" required /></label>
+          <label>Guardian Account Email <input type="email" name="guardian_email" autocomplete="off" /><span>Invite this email through Supabase Authentication first. Leave blank to keep the currently linked guardian.</span></label>
+          <label class="checkbox-field"><input type="checkbox" name="manual_approval" /> Manually approve this minor to bill using their own athlete credentials</label>
+          <label class="manual-approval-note" hidden>Approval Note <textarea name="approval_note" rows="3" minlength="10" maxlength="1000" placeholder="Document why this exception was approved."></textarea></label>
+          <label class="checkbox-field"><input type="checkbox" name="billing_enabled" /> Enable discretionary billing for this athlete</label>
+          <label>Billing Enablement Note <textarea name="billing_enabled_note" rows="2" maxlength="1000" placeholder="Optional reason or scope for enabling billing."></textarea></label>
+          <button type="submit" class="button button-primary">Save Billing Authorization</button>
+        </form>
+        <section class="invoice-section">
+          <div class="invoice-section-heading"><h3>One-off invoices</h3><p>Create an inert draft first. Finalizing and sending always requires a separate confirmation.</p></div>
+          <form class="draft-invoice-form portal-form coach-only" hidden>
+            <h3>Create draft invoice</h3>
+            <div class="portal-form-row"><label>Amount (USD) <input type="number" name="amount" min="1" max="10000" step="0.01" required /></label><label>Due Date <input type="date" name="due_date" required /></label></div>
+            <label>Description <textarea name="description" rows="3" minlength="5" maxlength="500" required></textarea></label>
+            <button type="submit" class="button button-secondary">Create Draft Only</button>
+          </form>
+          <form class="send-invoice-form portal-form coach-only" hidden>
+            <h3>Finalize and send a reviewed draft</h3>
+            <label>Exact Draft Invoice ID <input type="text" name="invoice_id" pattern="in_[A-Za-z0-9]+" placeholder="in_…" required /></label>
+            <label>Confirmation Phrase <input type="text" name="confirmation" placeholder="FINALIZE_AND_SEND" required /></label>
+            <button type="submit" class="button button-primary">Finalize and Send</button>
+          </form>
+          <div class="invoice-list portal-list" aria-live="polite"></div>
+        </section>
+        <p class="billing-note">Odyssey never receives or stores your card details. Stripe securely handles payment information, receipts, and billing changes.</p>
       </section>
     </section>
   </main>

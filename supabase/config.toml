@@ -1,0 +1,18 @@
+[functions.create-checkout-session]
+verify_jwt = true
+
+[functions.create-customer-portal-session]
+verify_jwt = true
+
+[functions.configure-billing-authorization]
+verify_jwt = true
+
+[functions.create-draft-invoice]
+verify_jwt = true
+
+[functions.finalize-send-invoice]
+verify_jwt = true
+
+# Stripe authenticates this public endpoint with its webhook signature.
+[functions.stripe-webhook]
+verify_jwt = false

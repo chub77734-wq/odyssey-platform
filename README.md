@@ -36,3 +36,12 @@ file attachments through Supabase.
 
 The `portal-files` bucket is private. Row-level security limits athletes to their
 own profile, workouts, messages, and file folder; coaches can manage every athlete.
+
+## Test-mode billing
+
+The portal includes a review-ready Stripe Checkout and Customer Portal integration.
+It is disabled until the billing SQL, Edge Functions, test product, webhook, and
+secrets are deliberately configured. See [BILLING_SETUP.md](BILLING_SETUP.md) for
+the staged test-mode setup, required guardian onboarding for minors, and go-live
+checklist. Billing is coach-enabled per athlete and includes an optional, two-step
+draft/review/finalize workflow for discretionary one-off invoices.
