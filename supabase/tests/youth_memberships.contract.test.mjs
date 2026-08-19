@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 
 const catalog = readFileSync(new URL("../migrations/20260819154606_effective_dated_youth_memberships.sql", import.meta.url), "utf8");
 const lifecycle = readFileSync(new URL("../migrations/20260819154854_youth_checkout_reservation.sql", import.meta.url), "utf8");
+const hardening = readFileSync(new URL("../migrations/20260819193834_harden_youth_membership_schema.sql", import.meta.url), "utf8");
 
 const publicTables = [
   "membership_programs",
@@ -46,5 +47,20 @@ assert.match(lifecycle, /status = 'pending'[\s\S]*reservation_expires_at <= now\
   "expired pending assignments must be releasable before a new reservation");
 assert.match(lifecycle, /when target_subscription_status in \('active', 'trialing', 'canceled', 'incomplete_expired'\) then null\s+else reservation_expires_at/,
   "incomplete subscriptions must retain a finite reservation expiry");
+
+assert.match(hardening, /alter extension btree_gist set schema extensions;/);
+for (const index of [
+  "billing_accounts_member_plan_assignment_idx",
+  "billing_invoices_member_plan_assignment_idx",
+  "billing_invoices_plan_version_idx",
+  "member_plan_assignments_plan_day_count_idx",
+  "member_plan_assignments_plan_terms_idx",
+  "membership_plan_entitlements_key_idx",
+  "membership_plan_versions_program_idx",
+]) {
+  assert.match(hardening, new RegExp("create index if not exists " + index));
+}
+assert.match(hardening, /for select to anon[\s\S]*publication_status = 'published'/);
+assert.match(hardening, /for select to authenticated[\s\S]*or \(select public\.is_coach\(\)\)/);
 
 console.log("youth membership migration security and lifecycle contract tests passed");
