@@ -75,6 +75,7 @@ a {
 .brand {
   display: flex;
   align-items: center;
+  min-height: 44px;
   gap: 16px;
   font-size: 0.95rem;
   font-weight: 800;
