@@ -11,6 +11,12 @@ declare
   youth_definition_count integer;
   capacity_count integer;
 begin
+  if to_regprocedure(
+    'public.activate_youth_membership_assignment(uuid,uuid,text,text,text)'
+  ) is null then
+    raise exception 'Checkout migration function was not parsed and installed';
+  end if;
+
   select count(*) into youth_count
   from public.active_membership_plans
   where audience = 'youth' and price_cents in (10000, 15000, 20000);

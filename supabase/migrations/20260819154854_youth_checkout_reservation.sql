@@ -265,11 +265,13 @@ begin
   where id = target_assignment_id;
 
   if target_subscription_status in ('active', 'trialing', 'canceled', 'incomplete_expired')
-     and selected_assignment.status is distinct from case
-       when target_subscription_status = 'active' then 'active'
-       when target_subscription_status = 'trialing' then 'trialing'
-       else 'canceled'
-     end then
+     and selected_assignment.status is distinct from (
+       case
+         when target_subscription_status = 'active' then 'active'
+         when target_subscription_status = 'trialing' then 'trialing'
+         else 'canceled'
+       end
+     ) then
     insert into public.membership_status_events
       (assignment_id, from_status, to_status, effective_at, source)
     values (
