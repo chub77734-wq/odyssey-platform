@@ -143,6 +143,7 @@ Deno.serve(async (req) => {
       };
       checkout = await stripe.checkout.sessions.create({
         mode: "subscription",
+        integration_identifier: "odyssey_portal_qzmtkavp",
         customer: customerId,
         client_reference_id: actor.athleteId,
         line_items: [{ price: reservation.external_price_id, quantity: 1 }],

@@ -5,10 +5,12 @@ const checkout = readFileSync(new URL("../create-checkout-session/index.ts", imp
 const webhook = readFileSync(new URL("../stripe-webhook/index.ts", import.meta.url), "utf8");
 const migration = readFileSync(new URL("../../migrations/20260819154854_youth_checkout_reservation.sql", import.meta.url), "utf8");
 const portal = readFileSync(new URL("../../../portal.js", import.meta.url), "utf8");
+const billingAccess = readFileSync(new URL("./billing-access.ts", import.meta.url), "utf8");
 
 assert.match(checkout, /forbiddenFields\.some/);
 assert.match(checkout, /reserve_youth_membership_checkout/);
 assert.match(checkout, /price: reservation\.external_price_id/);
+assert.match(checkout, /integration_identifier: "odyssey_portal_[a-z]{8}"/);
 assert.doesNotMatch(checkout, /price: stripePriceId\(\)/);
 assert.match(checkout, /member_plan_assignment_id: reservation\.assignment_id/);
 assert.match(webhook, /activate_youth_membership_assignment/);
@@ -72,6 +74,10 @@ assert.match(migration, /a\.id <> target_assignment_id/);
 assert.match(migration, /if selected_assignment\.reservation_expires_at > now\(\) then\s+return;/);
 assert.match(portal, /status === "incomplete" \? "Continue Payment"/);
 assert.match(portal, /billingRecord\?\.subscription_status === "incomplete"/);
+assert.match(billingAccess, /isUnder18\(athlete\.date_of_birth\) && !authorization\?\.minor_self_billing_approved/);
+assert.match(billingAccess, /A parent or guardian must sign in to manage billing for this minor/);
+assert.match(billingAccess, /authorization\?\.guardian_user_id !== user\.id/);
+assert.match(billingAccess, /identityType: "guardian"/);
 
 const firstConcurrentResume = resumeIncomplete({ now: 31, reservationExpiresAt: 30, capacityAvailable: true });
 const secondConcurrentResume = resumeIncomplete({
