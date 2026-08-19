@@ -1346,6 +1346,45 @@ main > section {
   color: var(--gold);
 }
 
+.membership-enrollment {
+  display: grid;
+  gap: 14px;
+  min-width: min(100%, 340px);
+}
+
+.membership-enrollment > label,
+.membership-day-picker {
+  display: grid;
+  gap: 7px;
+}
+
+.membership-enrollment select {
+  width: 100%;
+}
+
+.membership-day-picker {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.membership-day-picker legend {
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+
+.membership-day-options {
+  display: grid;
+  gap: 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.membership-day-option {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
 .invoice-status {
   font-size: 0.75rem;
   font-weight: 800;
@@ -1406,6 +1445,10 @@ main > section {
 
   .billing-actions {
     justify-content: flex-start;
+  }
+
+  .membership-day-options {
+    grid-template-columns: 1fr;
   }
 
   .invoice-item {

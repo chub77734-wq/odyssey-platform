@@ -53,6 +53,14 @@ export function stripePriceId() {
   return env("STRIPE_PRICE_ID");
 }
 
+export function billingEnvironment(): "test" | "live" {
+  const value = env("STRIPE_BILLING_ENVIRONMENT");
+  if (value !== "test" && value !== "live") {
+    throw new Error("STRIPE_BILLING_ENVIRONMENT must be test or live");
+  }
+  return value;
+}
+
 export function webhookSecret() {
   return env("STRIPE_WEBHOOK_SECRET");
 }

@@ -31,6 +31,9 @@ const sendInvoiceForm = document.querySelector(".send-invoice-form");
 const invoiceList = document.querySelector(".invoice-list");
 const startMembershipButton = document.querySelector(".start-membership-button");
 const manageBillingButton = document.querySelector(".manage-billing-button");
+const membershipEnrollment = document.querySelector(".membership-enrollment");
+const membershipPlanSelect = document.querySelector(".membership-plan-select");
+const membershipDayOptions = document.querySelector(".membership-day-options");
 const authForms = [loginForm, forgotForm, passwordForm];
 const hashParams = new URLSearchParams(window.location.hash.slice(1));
 const authFlowType = hashParams.get("type");
@@ -45,6 +48,11 @@ let isGuardian = false;
 let billingRecord = null;
 let billingAllowed = false;
 let draftInvoiceRequestId = null;
+let membershipPlans = [];
+let checkoutRequestId = null;
+let canResumeIncompleteMembership = false;
+
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 function setStatus(target, message, type = "info") {
   target.textContent = message;
@@ -125,10 +133,47 @@ function isUnder18(dateOfBirth) {
 function renderBillingActions() {
   const status = billingRecord?.subscription_status || null;
   const hasCustomer = Boolean(billingRecord);
-  const canStart = !status || ["canceled", "incomplete_expired"].includes(status);
+  const canStart = !status || ["canceled", "incomplete_expired"].includes(status)
+    || (status === "incomplete" && canResumeIncompleteMembership);
   billingActions.hidden = isCoach || !billingAllowed;
   startMembershipButton.hidden = isCoach || !billingAllowed || !canStart;
   manageBillingButton.hidden = isCoach || !billingAllowed || !hasCustomer;
+  membershipEnrollment.hidden = startMembershipButton.hidden || status === "incomplete" || membershipPlans.length === 0;
+  startMembershipButton.disabled = status === "incomplete" ? !canResumeIncompleteMembership : membershipPlans.length === 0;
+  startMembershipButton.textContent = status === "incomplete" ? "Continue Payment" : "Start Membership";
+}
+
+function renderMembershipDays() {
+  const plan = membershipPlans.find((item) => item.plan_code === membershipPlanSelect.value);
+  const required = plan?.weekly_selected_day_count || 0;
+  membershipDayOptions.innerHTML = WEEKDAYS.map((day, index) => `
+    <label class="membership-day-option">
+      <input type="checkbox" value="${index + 1}" /> ${day}
+    </label>`).join("");
+  membershipDayOptions.dataset.required = String(required);
+  membershipDayOptions.querySelectorAll("input").forEach((input) => input.addEventListener("change", () => {
+    const checked = membershipDayOptions.querySelectorAll("input:checked");
+    if (checked.length > required) input.checked = false;
+  }));
+}
+
+async function loadMembershipPlans() {
+  const { data, error } = await supabaseClient.from("active_membership_plans")
+    .select("plan_code, display_name, price_cents, currency, weekly_selected_day_count, public_copy")
+    .eq("audience", "youth")
+    .order("price_cents");
+  if (error) {
+    console.info("Membership catalog is not installed yet.", error.message);
+    membershipPlans = [];
+    renderBillingActions();
+    return;
+  }
+  membershipPlans = data || [];
+  membershipPlanSelect.innerHTML = membershipPlans.map((plan) =>
+    `<option value="${escapeHtml(plan.plan_code)}">${escapeHtml(plan.display_name)} — $${(plan.price_cents / 100).toFixed(0)}/month</option>`
+  ).join("");
+  renderMembershipDays();
+  renderBillingActions();
 }
 
 async function loadBilling() {
@@ -137,13 +182,25 @@ async function loadBilling() {
     billingDetail.textContent = "Select an athlete to view membership status.";
     startMembershipButton.hidden = true;
     manageBillingButton.hidden = true;
+    canResumeIncompleteMembership = false;
     return;
   }
   const { data, error } = await supabaseClient.from("billing_accounts")
-    .select("subscription_status, current_period_end, cancel_at_period_end, scheduled_cancel_at")
+    .select("subscription_status, current_period_end, cancel_at_period_end, scheduled_cancel_at, member_plan_assignment_id")
     .eq("athlete_id", selectedAthleteId).maybeSingle();
   if (error) throw error;
   billingRecord = data;
+  canResumeIncompleteMembership = false;
+  if (data?.subscription_status === "incomplete" && data.member_plan_assignment_id) {
+    const { data: assignment, error: assignmentError } = await supabaseClient
+      .from("member_plan_assignments")
+      .select("status, reservation_expires_at")
+      .eq("id", data.member_plan_assignment_id)
+      .maybeSingle();
+    if (assignmentError) throw assignmentError;
+    canResumeIncompleteMembership = assignment?.status === "pending"
+      && Boolean(assignment.reservation_expires_at);
+  }
   const status = billingRecord?.subscription_status || null;
   billingStatus.textContent = formatBillingStatus(status);
   billingStatus.dataset.status = status || "not_started";
@@ -328,8 +385,8 @@ async function refreshWorkspace() {
   setStatus(dashboardStatus, "Loading athlete workspace…");
   try {
     const loaders = isGuardian
-      ? [loadBilling(), loadBillingAccess(), loadInvoices()]
-      : [loadProfile(), loadWorkouts(), loadMessages(), loadBilling(), loadBillingAccess(), loadInvoices()];
+      ? [loadBilling(), loadBillingAccess(), loadMembershipPlans(), loadInvoices()]
+      : [loadProfile(), loadWorkouts(), loadMessages(), loadBilling(), loadBillingAccess(), loadMembershipPlans(), loadInvoices()];
     await Promise.all(loaders);
     setStatus(dashboardStatus, "Workspace is up to date.", "success");
   } catch (error) {
@@ -338,19 +395,20 @@ async function refreshWorkspace() {
   }
 }
 
-async function openStripeSession(functionName, button, loadingMessage) {
+async function openStripeSession(functionName, button, loadingMessage, extraBody = {}) {
   if (!session || isCoach) return;
   button.disabled = true;
   setStatus(dashboardStatus, loadingMessage);
   try {
     const { data, error } = await supabaseClient.functions.invoke(functionName, {
-      body: { athleteId: selectedAthleteId }
+      body: { athleteId: selectedAthleteId, ...extraBody }
     });
     if (error) throw error;
     if (!data?.url) throw new Error("Stripe did not return a redirect URL.");
     window.location.assign(data.url);
   } catch (error) {
     console.error(`${functionName} error:`, error);
+    if (functionName === "create-checkout-session") checkoutRequestId = null;
     setStatus(dashboardStatus, "We couldn't open secure billing. Please try again or contact Odyssey.", "error");
     button.disabled = false;
   }
@@ -582,10 +640,30 @@ document.querySelector(".logout-button").addEventListener("click", async () => {
 });
 
 startMembershipButton.addEventListener("click", () => {
-  openStripeSession("create-checkout-session", startMembershipButton, "Opening secure checkout…");
+  checkoutRequestId ||= crypto.randomUUID();
+  if (billingRecord?.subscription_status === "incomplete") {
+    return openStripeSession("create-checkout-session", startMembershipButton, "Reopening secure payment…", {
+      idempotencyKey: checkoutRequestId
+    });
+  }
+  const selectedIsoWeekdays = Array.from(membershipDayOptions.querySelectorAll("input:checked"))
+    .map((input) => Number(input.value));
+  const required = Number(membershipDayOptions.dataset.required || 0);
+  if (selectedIsoWeekdays.length !== required) {
+    return setStatus(dashboardStatus, `Select exactly ${required} recurring training day${required === 1 ? "" : "s"}.`, "error");
+  }
+  openStripeSession("create-checkout-session", startMembershipButton, "Reserving your training days…", {
+    planCode: membershipPlanSelect.value,
+    selectedIsoWeekdays,
+    idempotencyKey: checkoutRequestId
+  });
 });
 manageBillingButton.addEventListener("click", () => {
   openStripeSession("create-customer-portal-session", manageBillingButton, "Opening secure billing…");
+});
+membershipPlanSelect.addEventListener("change", () => {
+  checkoutRequestId = null;
+  renderMembershipDays();
 });
 
 manualApprovalCheckbox.addEventListener("change", () => {

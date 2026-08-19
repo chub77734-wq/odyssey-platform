@@ -4,11 +4,42 @@ import { updateInvoiceAudit } from "../_shared/invoice.ts";
 import { subscriptionSnapshot } from "../_shared/subscription.ts";
 
 async function syncSubscription(subscription: Stripe.Subscription, eventCreated: number, observedAt: string) {
-  const snapshot = subscriptionSnapshot(subscription, stripePriceId(), eventCreated, observedAt);
-  if (!snapshot) return;
   const admin = adminClient();
+  const assignmentId = subscription.metadata.member_plan_assignment_id;
+  const planVersionId = subscription.metadata.membership_plan_version_id;
+  const subscriptionPriceId = subscription.items.data[0]?.price.id;
+  let expectedPriceId = stripePriceId();
+
+  if (assignmentId || planVersionId) {
+    if (!assignmentId || !planVersionId || !subscriptionPriceId) {
+      throw new Error("Incomplete membership metadata on Stripe subscription");
+    }
+    const { data: mapping, error: mappingError } = await admin
+      .from("membership_plan_billing_mappings")
+      .select("external_price_id")
+      .eq("plan_version_id", planVersionId)
+      .eq("external_price_id", subscriptionPriceId)
+      .eq("enabled", true)
+      .maybeSingle();
+    if (mappingError) throw mappingError;
+    if (!mapping) throw new Error("Stripe subscription Price does not match its membership plan");
+    expectedPriceId = mapping.external_price_id;
+  }
+
+  const snapshot = subscriptionSnapshot(subscription, expectedPriceId, eventCreated, observedAt);
+  if (!snapshot) return;
   const { error } = await admin.rpc("apply_billing_subscription_snapshot", { snapshot });
   if (error) throw error;
+  if (assignmentId && planVersionId) {
+    const { error: activationError } = await admin.rpc("activate_youth_membership_assignment", {
+      target_assignment_id: assignmentId,
+      target_plan_version_id: planVersionId,
+      target_stripe_price_id: expectedPriceId,
+      target_stripe_subscription_id: subscription.id,
+      target_subscription_status: subscription.status
+    });
+    if (activationError) throw activationError;
+  }
 }
 
 Deno.serve(async (req) => {

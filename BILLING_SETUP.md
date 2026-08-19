@@ -193,3 +193,16 @@ Stripe webhook endpoint, then drop `public.billing_accounts` only after exportin
 confirming that its Stripe references are no longer needed. Preserve invoice audit
 records according to applicable accounting requirements. Do not delete Stripe
 customers, subscriptions, or finalized invoices as part of a database rollback.
+# Youth multi-tier enrollment (not deployed)
+
+The local migrations in `supabase/migrations/` add effective-dated youth plans at $100/1 recurring day, $150/2 recurring days, and $200/3 recurring days. Families select distinct recurring ISO weekdays during enrollment; selections are capacity-bound schedule entitlements, not unrestricted credits.
+
+Before test checkout can work:
+
+1. Apply both new migrations only to a local database or Supabase development branch.
+2. Configure approved operating weekdays and capacities in `recurring_training_day_capacities`.
+3. Create three monthly Stripe test Prices and add one enabled `test` row per plan version to `membership_plan_billing_mappings`.
+4. Set `STRIPE_BILLING_ENVIRONMENT=test`, then deploy the updated Checkout and webhook functions only to the test project.
+5. Test guardian/minor authorization, 1/2/3-day selection, full/missing capacity, retries, Checkout cancellation, and webhook Price/metadata mismatch.
+
+No live mapping should be created until leadership separately approves production rollout. Makeup, rollover, pause, cancellation, refund, proration, tax, household-discount, and waitlist policies remain undecided.
