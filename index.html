@@ -16,22 +16,30 @@
 
 <body>
 
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
   <header class="site-header">
     <a class="brand" href="#home" aria-label="Odyssey Track Club home">
       <span class="brand-mark">△</span>
       <span>Odyssey Track Club</span>
     </a>
 
-    <nav class="site-nav" aria-label="Main navigation">
-      <a href="#philosophy">Philosophy</a>
-      <a href="#odac">ODAC</a>
-      <a href="#schedule">Schedule</a>
-      <a href="#membership">Membership</a>
+    <button class="menu-toggle" type="button" aria-label="Open main menu" aria-expanded="false" aria-controls="main-navigation">
+      <span class="menu-toggle-label">Menu</span>
+      <span class="menu-toggle-icon" aria-hidden="true"></span>
+    </button>
+
+    <nav class="site-nav" id="main-navigation" aria-label="Main navigation">
+      <a href="#programs">Programs</a>
+      <a href="#schedule">Schedule &amp; Location</a>
+      <a href="#membership">Pricing</a>
+      <a href="#coaches">Coaches</a>
+      <a href="#faq">FAQ</a>
       <a class="nav-button athlete-access-link" href="portal.html">Athlete Sign In</a>
     </nav>
   </header>
 
-  <main>
+  <main id="main-content">
 
     <section class="hero" id="home">
       <div class="hero-content">
@@ -48,18 +56,50 @@
         </p>
 
         <div class="hero-actions">
-          <a class="button button-primary" href="#apply">
-            Apply for Membership
+          <a class="button button-primary" href="#programs">
+            Choose Your Path
           </a>
 
           <a class="button button-secondary athlete-access-link" href="portal.html">
             Athlete Sign In
           </a>
 
-          <a class="button button-secondary" href="#philosophy">
-            Our Philosophy
+          <a class="button button-secondary" href="#membership">
+            View Youth Pricing
           </a>
         </div>
+      </div>
+    </section>
+
+    <section class="section programs-section" id="programs" aria-labelledby="programs-heading">
+      <p class="eyebrow">Choose Your Path</p>
+      <h2 id="programs-heading">One standard. Two ways to train.</h2>
+      <p class="section-intro">
+        Odyssey develops speed, strength, resilience, and ownership through
+        purposeful coaching. Start with the pathway that fits your goals.
+      </p>
+
+      <div class="pathway-grid">
+        <article class="pathway-card">
+          <p class="card-kicker">Youth Athletes</p>
+          <h3>Develop for sport and life.</h3>
+          <p>
+            Track-based coaching that complements school programs through
+            disciplined work, technical development, and intentional recovery.
+          </p>
+          <a class="button button-primary" href="#membership">Explore Youth Training</a>
+        </article>
+
+        <article class="pathway-card">
+          <p class="card-kicker">Adult Performance</p>
+          <h3>Train like an athlete again.</h3>
+          <p>
+            A consultation-led pathway for former athletes and active adults
+            seeking coached progression, accountability, and resilient performance.
+          </p>
+          <p class="pathway-status">Pilot schedule and membership details are being finalized.</p>
+          <a class="button button-secondary" href="#apply">Request an Adult Consultation</a>
+        </article>
       </div>
     </section>
 
@@ -162,15 +202,51 @@
     </p>
   </div>
 </section>
-    <section class="section" id="membership">
-      <p class="eyebrow">Membership</p>
+    <section class="section pricing-section" id="membership" aria-labelledby="pricing-heading">
+      <p class="eyebrow">Youth Membership</p>
+      <h2 id="pricing-heading">Choose your weekly rhythm.</h2>
+      <p class="section-intro">
+        Every youth plan is built on the same Odyssey standard. Choose recurring
+        training days at enrollment, subject to session capacity. Those selected
+        days are the membership entitlement and are not unrestricted credits.
+      </p>
 
-      <h2>One standard. One coaching experience.</h2>
+      <div class="pricing-grid" aria-label="Youth membership options">
+        <article class="pricing-card">
+          <p class="card-kicker">Youth 1 Day</p>
+          <h3>Odyssey 1</h3>
+          <p class="price"><span class="price-amount">$100</span><span class="price-cadence">/month</span></p>
+          <p class="access-line">1 recurring selected training day per week</p>
+          <p>For school-program athletes who need one purposeful weekly supplement.</p>
+          <p class="pricing-position">One purposeful weekly session. Build the habit.</p>
+          <a class="button button-secondary" href="#apply" aria-label="Apply for Youth 1 Day at $100 per month">Apply for Youth 1 Day</a>
+        </article>
 
-      <p>
-        Odyssey membership is $200 per month and includes structured
-        coaching, individualized development, progress tracking, and
-        accountability.
+        <article class="pricing-card pricing-card-featured">
+          <p class="popular-badge">Most Popular</p>
+          <p class="card-kicker">Youth 2 Days</p>
+          <h3>Odyssey 2</h3>
+          <p class="price"><span class="price-amount">$150</span><span class="price-cadence">/month</span></p>
+          <p class="access-line">2 recurring selected training days per week</p>
+          <p>For athletes balancing speed, strength, or recovery needs.</p>
+          <p class="pricing-position">Two coached touchpoints for consistent development.</p>
+          <a class="button button-primary" href="#apply" aria-label="Apply for Youth 2 Days at $150 per month">Apply for Youth 2 Days</a>
+        </article>
+
+        <article class="pricing-card">
+          <p class="card-kicker">Youth 3 Days</p>
+          <h3>Odyssey 3</h3>
+          <p class="price"><span class="price-amount">$200</span><span class="price-cadence">/month</span></p>
+          <p class="access-line">3 recurring selected training days per week</p>
+          <p>For athletes seeking the full Odyssey weekly experience.</p>
+          <p class="pricing-position">Complete weekly coaching across work, speed, and recovery.</p>
+          <a class="button button-secondary" href="#apply" aria-label="Apply for Youth 3 Days at $200 per month">Apply for Youth 3 Days</a>
+        </article>
+      </div>
+
+      <p class="pricing-note">
+        Selected training days are chosen during enrollment and depend on session
+        capacity. They are recurring membership entitlements, not unrestricted credits.
       </p>
     </section>
 <section class="section coaches-section" id="coaches">
@@ -250,11 +326,48 @@
   </div>
 </section>
 
+    <section class="section faq-section" id="faq" aria-labelledby="faq-heading">
+      <p class="eyebrow">Frequently Asked Questions</p>
+      <h2 id="faq-heading">Know before you begin.</h2>
+
+      <div class="faq-list">
+        <details>
+          <summary>Which youth plan is right for my athlete?</summary>
+          <p>Youth 1 Day provides one recurring coached day each week, Youth 2 Days provides two, and Youth 3 Days provides three. Odyssey will confirm selected training days during enrollment, subject to session capacity.</p>
+        </details>
+        <details>
+          <summary>Does Odyssey replace school track practice?</summary>
+          <p>No. Odyssey is designed to supplement an athlete's school program, school-issued workouts, and independent training responsibilities.</p>
+        </details>
+        <details>
+          <summary>Where and when does youth training meet?</summary>
+          <p>Current sessions meet at Marshall Middle School — Mueller: Monday and Friday from 6:00 PM–7:30 PM, and Saturday from 8:00 AM–9:30 AM.</p>
+        </details>
+        <details>
+          <summary>Are selected training days flexible credits?</summary>
+          <p>No. Days are recurring selections made at enrollment, subject to session capacity. They are the membership entitlement, not unrestricted credits.</p>
+        </details>
+        <details>
+          <summary>What is Adult Performance?</summary>
+          <p>Adult Performance is a consultation-led pilot pathway for former athletes and active adults. Its schedule, capacity, membership details, and enrollment timing are still being finalized.</p>
+        </details>
+        <details>
+          <summary>How do I apply or inquire?</summary>
+          <p>Use the application link below. It opens Odyssey's current application in Google Forms in a new tab. Youth applicants can identify their preferred plan, and adults can request a consultation.</p>
+        </details>
+      </div>
+    </section>
+
 
     <section class="section final-cta" id="apply">
       <p class="eyebrow">Begin Your Odyssey</p>
 
       <h2>Ready to take the next step?</h2>
+
+      <p class="application-note">
+        Odyssey currently collects applications through Google Forms. The form
+        opens in a new tab and is separate from the Athlete Portal.
+      </p>
 
       <a 
       class="button button-primary"
@@ -262,8 +375,10 @@
   target="_blank"
   rel="noopener noreferrer"
 >
-        Apply Today
+        Open the Odyssey Application <span class="new-tab-note">(new tab)</span>
       </a>
+
+      <p class="adult-inquiry-note">Adult Performance inquiries use the same form while pilot details are finalized.</p>
     </section>
 
   </main>
