@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Odyssey Portal MVP — Review Prototype</title>
+  <link rel="stylesheet" href="portal-mvp-review.css">
+  <style>.no-js .role-view[hidden]{display:block!important}footer a{display:inline-flex;align-items:center;min-height:44px}</style>
+  <script>document.documentElement.classList.replace('no-js', 'js');</script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to portal content</a>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Odyssey portal review home"><span aria-hidden="true">△</span><strong>Odyssey</strong></a>
+    <div class="review-badge"><span aria-hidden="true"></span> Review prototype · synthetic data</div>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    <section class="intro" id="top" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Weekly coaching, clearly organized</p>
+        <h1 id="page-title">Your work. Your progress. One place.</h1>
+        <p>Review training, check in with your coach, reserve sessions, and understand what comes next.</p>
+      </div>
+      <aside class="prototype-note" aria-label="Prototype notice">
+        <strong>Review mode</strong>
+        <p>Everything on this page is fictional. Nothing saves, sends, reserves, or changes a real account.</p>
+      </aside>
+    </section>
+
+    <noscript>
+      <div class="noscript-note"><strong>JavaScript is off.</strong> All four sample role views are displayed below. Interactive review actions are unavailable, but the full prototype remains readable.</div>
+    </noscript>
+
+    <section class="role-picker" aria-labelledby="role-heading">
+      <div>
+        <p class="eyebrow">Preview the experience</p>
+        <h2 id="role-heading">Choose a sample role</h2>
+      </div>
+      <div class="role-tabs" role="tablist" aria-label="Sample portal roles">
+        <button role="tab" id="athlete-role-tab" aria-controls="athlete-view" aria-selected="true" data-role="athlete">Athlete</button>
+        <button role="tab" id="coach-role-tab" aria-controls="coach-view" aria-selected="false" tabindex="-1" data-role="coach">Coach</button>
+        <button role="tab" id="admin-role-tab" aria-controls="admin-view" aria-selected="false" tabindex="-1" data-role="admin">Admin</button>
+        <button role="tab" id="guardian-role-tab" aria-controls="guardian-view" aria-selected="false" tabindex="-1" data-role="guardian">Parent / guardian</button>
+      </div>
+    </section>
+
+    <p class="app-status" id="app-status" role="status" aria-live="polite"></p>
+
+    <section class="role-view" id="athlete-view" role="tabpanel" aria-labelledby="athlete-role-tab" data-role-panel="athlete">
+      <div class="dashboard-heading">
+        <div><p class="eyebrow">Athlete home</p><h2>Good afternoon, Jordan.</h2><p>Here is the work that matters this week.</p></div>
+        <div class="membership-chip"><span>Membership</span><strong>2 recurring days</strong><small>Monday + Friday</small></div>
+      </div>
+
+      <nav class="section-nav" aria-label="Athlete dashboard sections">
+        <a href="#athlete-today">Today</a><a href="#athlete-week">Week</a><a href="#athlete-messages">Messages <span>2</span></a><a href="#athlete-schedule">Schedule</a><a href="#athlete-progress">Progress</a>
+      </nav>
+
+      <div class="dashboard-grid">
+        <section class="panel panel-wide" id="athlete-today" aria-labelledby="today-heading">
+          <div class="panel-heading">
+            <div><p class="kicker">Today · Monday</p><h3 id="today-heading">Acceleration + max velocity</h3></div>
+            <span class="status status-ready">Ready</span>
+          </div>
+          <dl class="workout-meta"><div><dt>Week</dt><dd>3 of 6</dd></div><div><dt>Phase</dt><dd>Specific preparation</dd></div><div><dt>Intensity</dt><dd>High · 90–95%</dd></div><div><dt>Coach</dt><dd>Coach Dawson</dd></div></dl>
+          <div class="workout-blocks">
+            <details open><summary>Warm-up <span>18 min</span></summary><p>Mobility flow, sprint drills, 2 × 30m progressive buildups.</p></details>
+            <details><summary>Acceleration <span>6 reps</span></summary><p>3 × 10m and 3 × 20m from three-point start. Full recovery. Push the ground back; stay patient through the first four steps.</p></details>
+            <details><summary>Flying sprint <span>3 reps</span></summary><p>20m buildup + 20m fly. Six minutes rest. Tall posture and relaxed shoulders.</p></details>
+            <details><summary>Strength finish <span>3 rounds</span></summary><p>Bounds, split squat isometric, calf series, then guided cooldown.</p></details>
+          </div>
+          <div class="button-row"><button class="button primary" type="button" data-dialog-open="checkin-dialog">Complete &amp; check in</button><button class="button secondary" type="button" data-dialog-open="change-dialog">Request a change</button></div>
+          <p class="helper">Workout changes are requests until your coach approves them.</p>
+        </section>
+
+        <aside class="panel readiness-card" aria-labelledby="readiness-heading">
+          <p class="kicker">Before you train</p><h3 id="readiness-heading">Readiness snapshot</h3>
+          <div class="readiness-score"><strong>8.2</strong><span>Ready to train</span></div>
+          <ul class="metric-list"><li><span>Sleep</span><strong>8 hours</strong></li><li><span>Energy</span><strong>High</strong></li><li><span>Soreness</span><strong>Low</strong></li><li><span>Stress</span><strong>Moderate</strong></li><li><span>Pain flag</span><strong>None</strong></li></ul>
+          <button class="text-button" type="button" data-dialog-open="checkin-dialog">Update readiness</button>
+          <p class="fine-print">Readiness is a coaching check-in, not medical advice or diagnosis.</p>
+        </aside>
+
+        <section class="panel panel-wide" id="athlete-week" aria-labelledby="week-heading">
+          <div class="panel-heading"><div><p class="kicker">August 17–23</p><h3 id="week-heading">This training week</h3></div><span class="status">2 sessions</span></div>
+          <ol class="week-list">
+            <li class="is-today"><time datetime="2026-08-17"><strong>Mon</strong><span>17</span></time><div><strong>Acceleration + max velocity</strong><span>6:00–7:30 PM · Mueller</span></div><span class="status status-ready">Today</span></li>
+            <li><time datetime="2026-08-19"><strong>Wed</strong><span>19</span></time><div><strong>Independent recovery</strong><span>Mobility + easy movement · 25 min</span></div><span class="status">Optional</span></li>
+            <li><time datetime="2026-08-21"><strong>Fri</strong><span>21</span></time><div><strong>Speed endurance</strong><span>6:00–7:30 PM · Mueller</span></div><span class="status status-reserved">Reserved</span></li>
+          </ol>
+        </section>
+
+        <section class="panel" id="athlete-messages" aria-labelledby="messages-heading">
+          <div class="panel-heading"><div><p class="kicker">Private coach line</p><h3 id="messages-heading">Messages</h3></div><span class="unread-count">2 unread</span></div>
+          <div class="message-preview"><div class="avatar" aria-hidden="true">CD</div><div><strong>Coach Dawson</strong><time datetime="2026-08-20T09:12">9:12 AM</time><p>Your first 10m looked sharper. Keep the same patience today.</p></div></div>
+          <div class="message-preview"><div class="avatar athlete-avatar" aria-hidden="true">JR</div><div><strong>You</strong><time datetime="2026-08-19T18:44">Yesterday</time><p>Got it. I will keep the first steps low and relaxed.</p></div></div>
+          <form class="quick-form" data-mock-form data-success="Message marked as sent in this review only."><label for="athlete-message">Reply to your coach</label><textarea id="athlete-message" required maxlength="800" placeholder="Share a question or update…"></textarea><button class="button primary" type="submit">Send reply</button><p class="form-message" role="status"></p></form>
+        </section>
+
+        <section class="panel" id="athlete-schedule" aria-labelledby="schedule-heading">
+          <div class="panel-heading"><div><p class="kicker">Session access</p><h3 id="schedule-heading">Reserve a session</h3></div><span class="status">1 seat left</span></div>
+          <div class="session-card"><time datetime="2026-08-22"><strong>Saturday</strong><span>Aug 22 · 8:00–9:30 AM</span></time><p>Marshall Middle School — Mueller</p><button class="button secondary" type="button" data-reserve>Reserve Saturday</button><p class="form-message" role="status"></p></div>
+          <p class="helper">Reservations are checked against your selected-day membership entitlement and session capacity.</p>
+        </section>
+
+        <section class="panel panel-full" id="athlete-progress" aria-labelledby="progress-heading">
+          <div class="panel-heading"><div><p class="kicker">Validated performance</p><h3 id="progress-heading">Progress summary</h3></div><span class="status status-positive">3 personal bests</span></div>
+          <div class="progress-grid">
+            <article><span>10m acceleration</span><strong>1.78s</strong><small>PB · practice · electronic · indoor</small><div class="spark" style="--progress:82%"><span></span></div></article>
+            <article><span>Flying 20m</span><strong>2.13s</strong><small>Practice · electronic · outdoor · legal wind</small><div class="spark" style="--progress:68%"><span></span></div></article>
+            <article><span>60m</span><strong>7.18s</strong><small>PB · competition · electronic · indoor</small><div class="spark" style="--progress:76%"><span></span></div></article>
+            <article><span>Standing broad jump</span><strong>2.74m</strong><small>PB · practice · indoor</small><div class="spark" style="--progress:88%"><span></span></div></article>
+          </div>
+          <div class="consistency"><div><span>Training consistency</span><strong>11 of 12 sessions</strong></div><progress value="11" max="12">11 of 12 sessions</progress></div>
+          <details class="empty-state"><summary>See a sample empty state</summary><div><strong>No validated 100m result yet.</strong><p>Your coach will add an approved result when one is available.</p></div></details>
+        </section>
+      </div>
+    </section>
+
+    <section class="role-view" id="coach-view" role="tabpanel" aria-labelledby="coach-role-tab" data-role-panel="coach" hidden>
+      <div class="dashboard-heading"><div><p class="eyebrow">Coach home</p><h2>Today’s coaching desk</h2><p>Attendance, athlete alerts, messages, and work awaiting review.</p></div><div class="coach-date"><span>Thursday</span><strong>August 20</strong></div></div>
+      <nav class="section-nav" aria-label="Coach dashboard sections"><a href="#coach-attendance">Attendance</a><a href="#coach-alerts">Readiness alerts <span>2</span></a><a href="#coach-inbox">Inbox <span>6</span></a><a href="#coach-assign">Assign</a><a href="#coach-review">Review <span>4</span></a></nav>
+      <div class="dashboard-grid">
+        <section class="panel panel-wide" id="coach-attendance" aria-labelledby="attendance-heading"><div class="panel-heading"><div><p class="kicker">Friday · 6:00 PM</p><h3 id="attendance-heading">Speed endurance attendance</h3></div><span class="status">8 reserved</span></div><div class="attendance-list" role="group" aria-label="Synthetic athlete attendance"><label><input type="checkbox" checked> Jordan Reed <span>2-day plan</span></label><label><input type="checkbox"> Maya Torres <span>3-day plan</span></label><label><input type="checkbox" checked> Andre Wilson <span>1-day plan</span></label><label><input type="checkbox"> Nia Brooks <span>2-day plan</span></label></div><button class="button primary" type="button" data-action-status="Attendance saved in this review only.">Save attendance</button></section>
+        <aside class="panel" id="coach-alerts" aria-labelledby="alerts-heading"><div class="panel-heading"><div><p class="kicker">Needs attention</p><h3 id="alerts-heading">Readiness alerts</h3></div><span class="status status-alert">2 flags</span></div><article class="alert-card"><div><strong>Maya Torres</strong><span>Pain flag · hamstring</span></div><button class="text-button" type="button" data-action-status="Maya's synthetic alert marked reviewed.">Review</button></article><article class="alert-card low"><div><strong>Andre Wilson</strong><span>Sleep 4.5h · energy low</span></div><button class="text-button" type="button" data-action-status="Andre's synthetic alert marked reviewed.">Review</button></article><p class="fine-print">Alerts support coaching decisions; they are not diagnoses or emergency monitoring.</p></aside>
+        <section class="panel" id="coach-inbox" aria-labelledby="inbox-heading"><div class="panel-heading"><div><p class="kicker">Central inbox</p><h3 id="inbox-heading">Unread &amp; awaiting feedback</h3></div><span class="unread-count">6 items</span></div><ul class="inbox-list"><li><button type="button"><strong>Jordan Reed</strong><span>Question about fly timing · 18 min</span></button></li><li><button type="button"><strong>Nia Brooks</strong><span>Video awaiting written feedback · 1 hr</span></button></li><li><button type="button"><strong>Maya Torres</strong><span>Workout change request · 2 hrs</span></button></li></ul></section>
+        <section class="panel" id="coach-review" aria-labelledby="review-heading"><div class="panel-heading"><div><p class="kicker">Coach approval</p><h3 id="review-heading">Athlete submissions</h3></div><span class="status">4 pending</span></div><article class="submission"><strong>Jordan Reed · Flying 20m</strong><p>2.13s · practice · electronic · outdoor · legal wind</p><div class="button-row"><button class="button primary" type="button" data-action-status="Synthetic result approved.">Approve</button><button class="button secondary" type="button" data-action-status="Synthetic result returned for correction.">Request correction</button></div></article></section>
+        <section class="panel panel-full" id="coach-assign" aria-labelledby="assign-heading"><div class="panel-heading"><div><p class="kicker">Training workflow</p><h3 id="assign-heading">Assign a workout</h3></div><span class="status">Draft</span></div><form class="assignment-form" data-mock-form data-success="Workout draft created in this review only."><div class="form-grid"><label>Assign to<select required><option value="">Choose athlete or group</option><option>Acceleration group</option><option>Jordan Reed</option></select></label><label>Training date<input type="date" required value="2026-08-24"></label><label>Training week<input type="number" min="1" max="52" required value="4"></label><label>Phase<select required><option>Specific preparation</option><option>Competition</option><option>Recovery</option></select></label></div><label>Workout title<input type="text" required value="Acceleration + upright mechanics"></label><label>Training blocks<textarea required rows="4">Warm-up: mobility + sprint drills\nAcceleration: 4 × 20m, full recovery\nFlying sprint: 3 × fly 20m, 6 min rest\nCue: push patiently, then rise tall</textarea></label><div class="button-row"><button class="button primary" type="submit">Create review draft</button><button class="button secondary" type="button" data-action-status="Synthetic assignment preview opened.">Preview athlete view</button></div><p class="form-message" role="status"></p></form></section>
+      </div>
+    </section>
+
+    <section class="role-view" id="admin-view" role="tabpanel" aria-labelledby="admin-role-tab" data-role-panel="admin" hidden>
+      <div class="dashboard-heading"><div><p class="eyebrow">Admin overview</p><h2>Operations without overexposure.</h2><p>Manage assignments and platform health while athlete data remains least-privilege.</p></div><span class="status status-positive">All systems normal</span></div>
+      <div class="dashboard-grid"><section class="panel panel-wide"><p class="kicker">Today</p><h3>Operational snapshot</h3><div class="stat-grid"><article><strong>18</strong><span>Active athletes</span></article><article><strong>3</strong><span>Training groups</span></article><article><strong>14</strong><span>Weekly reservations</span></article><article><strong>2</strong><span>Consent items due</span></article></div></section><section class="panel"><p class="kicker">Access</p><h3>Coach assignments</h3><ul class="metric-list"><li><span>Coach Dawson</span><strong>8 athletes</strong></li><li><span>Coach Caleb</span><strong>6 athletes</strong></li><li><span>Coach DJ</span><strong>4 athletes</strong></li></ul><p class="helper">Coaches see assigned athletes and groups only.</p></section><section class="panel"><p class="kicker">Privacy</p><h3>Restricted access</h3><ul class="check-list"><li>Medical files separated</li><li>Guardian training access disabled</li><li>Performance changes audited</li><li>Role permissions explicit</li></ul></section><section class="panel panel-full"><p class="kicker">Review limitation</p><h3>Administrative details intentionally minimized</h3><p>This prototype shows operational counts and assignments, not athlete wellness, private messages, or medical information. Broader admin access requires a documented operational need.</p></section></div>
+    </section>
+
+    <section class="role-view" id="guardian-view" role="tabpanel" aria-labelledby="guardian-role-tab" data-role-panel="guardian" hidden>
+      <div class="dashboard-heading"><div><p class="eyebrow">Parent / guardian</p><h2>Billing and consent only.</h2><p>Athletes own their training journey and communicate directly with their coaches.</p></div><span class="status">Review boundary</span></div>
+      <div class="dashboard-grid"><section class="panel panel-wide"><p class="kicker">Account responsibility</p><h3>Jordan Reed</h3><dl class="account-list"><div><dt>Membership</dt><dd>Active · 2 recurring days</dd></div><div><dt>Next billing date</dt><dd>September 1, 2026</dd></div><div><dt>Payment method</dt><dd>Managed securely by Stripe</dd></div><div><dt>Consent</dt><dd>Current</dd></div></dl><button class="button secondary" type="button" data-action-status="Billing management is disabled in this review prototype.">Manage billing</button></section><aside class="panel boundary-card"><p class="kicker">Athlete independence</p><h3>What is not shared</h3><ul class="check-list unavailable"><li>Training plans and results</li><li>Readiness and pain check-ins</li><li>Coach messages and feedback</li><li>Athlete media and files</li></ul><p class="helper">This reflects the current product direction. Expanded guardian access requires explicit approval.</p></aside></div>
+    </section>
+  </main>
+
+  <dialog id="checkin-dialog" aria-labelledby="checkin-title"><form method="dialog" class="dialog-card" data-checkin-form><div class="dialog-heading"><div><p class="kicker">Athlete check-in</p><h2 id="checkin-title">How did today feel?</h2></div><button class="icon-button" value="cancel" aria-label="Close check-in">×</button></div><div class="form-grid"><label>Workout status<select name="status" required><option value="">Choose status</option><option>Completed</option><option>Partially completed</option><option>Missed</option></select></label><label>Effort (1–10)<input name="effort" type="number" min="1" max="10" required></label><label>Sleep (hours)<input name="sleep" type="number" min="0" max="16" step="0.5" required></label><label>Energy<select name="energy" required><option value="">Choose level</option><option>Low</option><option>Moderate</option><option>High</option></select></label><label>Soreness<select name="soreness" required><option value="">Choose level</option><option>None</option><option>Low</option><option>Moderate</option><option>High</option></select></label><label>Stress<select name="stress" required><option value="">Choose level</option><option>Low</option><option>Moderate</option><option>High</option></select></label></div><fieldset><legend>Are you experiencing pain?</legend><label class="choice"><input type="radio" name="pain" value="no" required> No</label><label class="choice"><input type="radio" name="pain" value="yes"> Yes — flag my coach</label></fieldset><label>Note for your coach<textarea name="note" rows="3" maxlength="800" placeholder="Optional context…"></textarea></label><p class="fine-print">Pain flags notify a coach for follow-up. This is not emergency monitoring or medical care.</p><p class="form-error" role="alert"></p><div class="button-row"><button class="button primary" value="default">Save check-in</button><button class="button secondary" value="cancel">Cancel</button></div></form></dialog>
+  <dialog id="change-dialog" aria-labelledby="change-title"><form method="dialog" class="dialog-card" data-change-form><div class="dialog-heading"><div><p class="kicker">Coach approval required</p><h2 id="change-title">Request a workout change</h2></div><button class="icon-button" value="cancel" aria-label="Close change request">×</button></div><label>What needs to change?<select name="change" required><option value="">Choose a reason</option><option>Schedule conflict</option><option>Equipment unavailable</option><option>Readiness concern</option><option>Other</option></select></label><label>Context for your coach<textarea name="context" rows="4" required minlength="8"></textarea></label><p class="form-error" role="alert"></p><div class="button-row"><button class="button primary" value="default">Send request</button><button class="button secondary" value="cancel">Cancel</button></div></form></dialog>
+
+  <footer><strong>Odyssey portal MVP review</strong><span>Synthetic data only · no account or backend connection</span><a href="mailto:odysseytrackclub@gmail.com">Contact Odyssey</a></footer>
+  <script src="portal-mvp-review.js"></script>
+</body>
+</html>
