@@ -1329,6 +1329,18 @@ details summary::marker {
   min-height: 48px;
 }
 
+.interest-form-link {
+  color: #090b0e;
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.interest-form-link:hover,
+.interest-form-link:focus-visible {
+  color: #090b0e;
+  background: #f4cb69;
+}
+
 .menu-toggle {
   display: none;
 }
@@ -1742,6 +1754,20 @@ html:not(.js) .site-nav {
 
   .final-cta {
     min-height: 620px;
+  }
+}
+
+@media (max-width: 420px) {
+  .header-actions {
+    gap: 8px;
+  }
+
+  .header-actions .nav-button {
+    min-width: 0;
+    padding-inline: 8px;
+    font-size: 0.68rem;
+    letter-spacing: 0.045em;
+    white-space: nowrap;
   }
 }
 
