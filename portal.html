@@ -6,15 +6,32 @@
   <title>Odyssey Athlete Portal</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <main class="portal-page">
-    <section class="portal-card auth-card">
-      <p class="eyebrow">Odyssey Track Club</p>
-      <h1>Athlete Portal</h1>
-      <p class="portal-intro">Your training, coach feedback, and Odyssey conversations in one place. Invited athletes can finish setup from the link in their invitation email.</p>
-      <p class="portal-status" role="status" aria-live="polite">Checking your account…</p>
+<body class="portal-body">
+  <a class="skip-link" href="#main-content">Skip to portal content</a>
+  <header class="portal-site-header">
+    <a class="brand" href="index.html" aria-label="Odyssey Track Club homepage"><span class="brand-mark">△</span><span>Odyssey Track Club</span></a>
+    <a class="portal-home-link" href="index.html">Back to Homepage</a>
+  </header>
+  <main class="portal-page" id="main-content">
+    <section class="portal-card auth-card" aria-labelledby="portal-auth-heading">
+      <div class="portal-auth-story">
+        <p class="eyebrow">Your Odyssey Workspace</p>
+        <h1 id="portal-auth-heading">Athlete Portal</h1>
+        <p class="portal-intro">Your training, coach feedback, and Odyssey conversations in one focused space.</p>
+        <div class="portal-feature-grid" aria-label="Portal features">
+          <article><span aria-hidden="true">01</span><h2>Training</h2><p>Review assigned workouts and coaching notes.</p></article>
+          <article><span aria-hidden="true">02</span><h2>Connection</h2><p>Message your coach and share approved files.</p></article>
+          <article><span aria-hidden="true">03</span><h2>Ownership</h2><p>Keep your goals, profile, and training information in one place.</p></article>
+        </div>
+      </div>
+      <div class="portal-auth-access">
+        <p class="eyebrow">Secure Access</p>
+        <h2>Welcome back.</h2>
+        <p class="portal-auth-note">Invited athletes can finish setup from the link in their invitation email.</p>
+        <p class="portal-status" role="status" aria-live="polite">Checking your account…</p>
+        <noscript><p class="portal-noscript">JavaScript is required to securely sign in to the Athlete Portal.</p></noscript>
 
-      <form class="login-form portal-form" hidden>
+      <form class="login-form portal-form" hidden aria-label="Athlete sign in">
         <label>Email <input type="email" name="email" autocomplete="email" required /></label>
         <label>Password <input type="password" name="password" autocomplete="current-password" required /></label>
         <button type="submit" class="button button-primary">Sign In</button>
@@ -31,6 +48,7 @@
         <label>Confirm New Password <input type="password" name="password_confirm" autocomplete="new-password" minlength="8" required /></label>
         <button type="submit" class="button button-primary">Save Password</button>
       </form>
+      </div>
     </section>
 
     <section class="portal-dashboard" hidden>
@@ -47,14 +65,14 @@
         <label for="athlete-select">Viewing athlete</label>
         <select id="athlete-select"></select>
       </div>
-      <nav class="portal-tabs" aria-label="Portal sections">
-        <button type="button" class="portal-tab training-only is-active" data-panel="workouts-panel">Workouts</button>
-        <button type="button" class="portal-tab training-only" data-panel="messages-panel">Coach Chat</button>
-        <button type="button" class="portal-tab training-only" data-panel="profile-panel">Profile</button>
-        <button type="button" class="portal-tab" data-panel="billing-panel">Billing</button>
+      <nav class="portal-tabs" aria-label="Portal sections" role="tablist">
+        <button type="button" class="portal-tab training-only is-active" id="workouts-tab" data-panel="workouts-panel" role="tab" aria-controls="workouts-panel" aria-selected="true">Workouts</button>
+        <button type="button" class="portal-tab training-only" id="messages-tab" data-panel="messages-panel" role="tab" aria-controls="messages-panel" aria-selected="false" tabindex="-1">Coach Chat</button>
+        <button type="button" class="portal-tab training-only" id="profile-tab" data-panel="profile-panel" role="tab" aria-controls="profile-panel" aria-selected="false" tabindex="-1">Profile</button>
+        <button type="button" class="portal-tab" id="billing-tab" data-panel="billing-panel" role="tab" aria-controls="billing-panel" aria-selected="false" tabindex="-1">Billing</button>
       </nav>
 
-      <section class="portal-panel training-only" id="workouts-panel">
+      <section class="portal-panel training-only" id="workouts-panel" role="tabpanel" aria-labelledby="workouts-tab">
         <div class="portal-panel-heading"><div><p class="section-kicker">Training plan</p><h2>Assigned Workouts</h2></div><p>Upcoming sessions and coaching notes.</p></div>
         <form class="workout-form portal-form coach-only" hidden>
           <h3>Assign a workout</h3>
@@ -68,15 +86,15 @@
         <div class="workout-list portal-list" aria-live="polite"></div>
       </section>
 
-      <section class="portal-panel training-only" id="messages-panel" hidden>
+      <section class="portal-panel training-only" id="messages-panel" role="tabpanel" aria-labelledby="messages-tab" hidden>
         <div class="portal-panel-heading">
           <div><p class="section-kicker">Direct line</p><h2>Coach Chat</h2></div>
           <div class="message-heading-actions">
             <p>Share updates, questions, documents, photos, or videos.</p>
-            <button type="button" class="button button-secondary message-compose-button">Write a Message</button>
+            <button type="button" class="button button-secondary message-compose-button" aria-expanded="false" aria-controls="message-form">Write a Message</button>
           </div>
         </div>
-        <form class="message-form portal-form">
+        <form class="message-form portal-form" id="message-form" hidden>
           <label for="message-body">Message</label>
           <div class="message-composer-row">
             <textarea id="message-body" name="body" rows="4" maxlength="4000" placeholder="Write an update or question…"></textarea>
@@ -87,7 +105,7 @@
         <div class="message-list" aria-live="polite"></div>
       </section>
 
-      <section class="portal-panel training-only" id="profile-panel" hidden>
+      <section class="portal-panel training-only" id="profile-panel" role="tabpanel" aria-labelledby="profile-tab" hidden>
         <div class="portal-panel-heading"><div><p class="section-kicker">Athlete details</p><h2>Profile</h2></div><p>Keep training information current for better coaching.</p></div>
         <form class="athlete-profile-form portal-form">
           <label>Full Name <input type="text" name="full_name" autocomplete="name" required /></label>
@@ -100,7 +118,7 @@
         </form>
       </section>
 
-      <section class="portal-panel" id="billing-panel" hidden>
+      <section class="portal-panel" id="billing-panel" role="tabpanel" aria-labelledby="billing-tab" hidden>
         <div class="portal-panel-heading"><div><p class="section-kicker">Membership</p><h2>Billing</h2></div><p>Secure payments and invoices are handled by Stripe.</p></div>
         <div class="billing-card" aria-live="polite">
           <div>
@@ -145,6 +163,7 @@
       </section>
     </section>
   </main>
+  <footer class="portal-footer"><p>Need help accessing your account?</p><a href="mailto:odysseytrackclub@gmail.com">odysseytrackclub@gmail.com</a></footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="portal.js"></script>
 </body>

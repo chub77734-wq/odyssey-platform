@@ -212,36 +212,18 @@ const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
 const slowConnection = ["slow-2g", "2g", "3g"].includes(connection?.effectiveType);
 
-function getMediaControl(video) {
-  return video.closest(".hero")?.querySelector(".media-pause-control")
-    || video.parentElement?.querySelector(".media-pause-control");
-}
-
-function setMediaControl(control, state) {
-  if (!control) return;
-  const icon = control.querySelector("span[aria-hidden]");
-  const label = control.querySelector("span:last-child");
-  const isPaused = state === "resume";
-  const nextLabel = isPaused ? label?.textContent.replace(/^Pause/, "Resume") : label?.textContent.replace(/^Resume/, "Pause");
-  if (icon) icon.textContent = isPaused ? "▶" : "Ⅱ";
-  if (label && nextLabel) label.textContent = nextLabel;
-  control.setAttribute("aria-label", nextLabel || (isPaused ? "Resume video" : "Pause video"));
-}
-
-function disableAmbientVideo(video, control) {
+function disableAmbientVideo(video) {
   video.pause();
   video.classList.remove("is-visible");
   video.replaceChildren();
   video.removeAttribute("src");
   video.load();
-  if (control) control.hidden = true;
 }
 
 if (ambientVideos.length && !reducedMotion.matches && !connection?.saveData && !slowConnection) {
   const isMobile = window.matchMedia("(max-width: 760px)").matches;
 
   ambientVideos.forEach((video) => {
-    const control = getMediaControl(video);
     const isHeroVideo = video.classList.contains("hero-video");
     const observedTarget = isHeroVideo ? video.closest(".hero") : video;
     const candidates = isMobile || video.dataset.preferWebm === "true"
@@ -250,7 +232,6 @@ if (ambientVideos.length && !reducedMotion.matches && !connection?.saveData && !
     const sources = candidates.filter(([source]) => source);
     let wasOutsideViewport = true;
     let isInViewport = false;
-    let userPaused = false;
     let playbackRequest = 0;
 
     if (!sources.length) return;
@@ -261,37 +242,18 @@ if (ambientVideos.length && !reducedMotion.matches && !connection?.saveData && !
       sourceElement.type = type;
       video.append(sourceElement);
     });
+    video.loop = true;
 
     video.addEventListener("playing", () => {
       video.classList.add("is-visible");
-      userPaused = false;
-      if (control) {
-        control.hidden = false;
-        setMediaControl(control, "pause");
-      }
     });
 
-    video.addEventListener("ended", () => {
-      if (control) control.hidden = true;
-    });
-
-    video.addEventListener("error", () => disableAmbientVideo(video, control));
-
-    control?.addEventListener("click", () => {
-      if (video.paused && !video.ended) {
-        video.play().catch(() => setMediaControl(control, "resume"));
-      } else if (!video.ended) {
-        userPaused = true;
-        video.pause();
-        setMediaControl(control, "resume");
-      }
-    });
+    video.addEventListener("error", () => disableAmbientVideo(video));
 
     function playFromStart() {
       if (!isInViewport || document.hidden) return;
       const request = ++playbackRequest;
       wasOutsideViewport = false;
-      userPaused = false;
 
       const beginPlayback = () => {
         if (request !== playbackRequest || !isInViewport || document.hidden) return;
@@ -300,9 +262,7 @@ if (ambientVideos.length && !reducedMotion.matches && !connection?.saveData && !
         } catch (_error) {
           // The poster remains visible if the browser cannot seek this source.
         }
-        video.play().catch(() => {
-          if (control) control.hidden = true;
-        });
+        video.play().catch(() => {});
       };
 
       if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
@@ -366,16 +326,7 @@ if (ambientVideos.length && !reducedMotion.matches && !connection?.saveData && !
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden && !video.paused) {
-        userPaused = true;
         video.pause();
-        if (control) setMediaControl(control, "resume");
-      }
-    });
-
-    video.addEventListener("pause", () => {
-      if (userPaused && !video.ended && control) {
-        control.hidden = false;
-        setMediaControl(control, "resume");
       }
     });
   });
@@ -384,8 +335,7 @@ if (ambientVideos.length && !reducedMotion.matches && !connection?.saveData && !
 reducedMotion.addEventListener?.("change", (event) => {
   if (event.matches) {
     ambientVideos.forEach((video) => {
-      const control = getMediaControl(video);
-      disableAmbientVideo(video, control);
+      disableAmbientVideo(video);
     });
   }
 });

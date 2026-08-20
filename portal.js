@@ -1,3 +1,5 @@
+document.documentElement.classList.add("js");
+
 const SUPABASE_KEY = "sb_publishable_UKztkCcChAcgx7ATcoeFIA_76EP9Ytl";
 const SUPABASE_URL = "https://ijasonewhoizpqzwymot.supabase.co";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -32,6 +34,8 @@ const invoiceList = document.querySelector(".invoice-list");
 const startMembershipButton = document.querySelector(".start-membership-button");
 const manageBillingButton = document.querySelector(".manage-billing-button");
 const authForms = [loginForm, forgotForm, passwordForm];
+const portalTabs = Array.from(document.querySelectorAll(".portal-tab"));
+const portalPanels = Array.from(document.querySelectorAll(".portal-panel"));
 const hashParams = new URLSearchParams(window.location.hash.slice(1));
 const authFlowType = hashParams.get("type");
 const authLinkError = hashParams.get("error_description");
@@ -57,15 +61,21 @@ function showAuthView(view) {
   dashboard.hidden = true;
 }
 
+function activatePortalTab(tab, { focus = false } = {}) {
+  portalTabs.forEach((item) => {
+    const active = item === tab;
+    item.classList.toggle("is-active", active);
+    item.setAttribute("aria-selected", String(active));
+    item.tabIndex = active ? 0 : -1;
+  });
+  portalPanels.forEach((panel) => { panel.hidden = panel.id !== tab.dataset.panel; });
+  if (focus) tab.focus();
+}
+
 function resetPortalRoleView() {
   document.querySelector(".portal-dashboard-header h1").textContent = "Training Portal";
   document.querySelectorAll(".training-only").forEach((element) => { element.hidden = false; });
-  document.querySelectorAll(".portal-tab").forEach((tab) => {
-    tab.classList.toggle("is-active", tab.dataset.panel === "workouts-panel");
-  });
-  document.querySelectorAll(".portal-panel").forEach((panel) => {
-    panel.hidden = panel.id !== "workouts-panel";
-  });
+  activatePortalTab(document.querySelector("[data-panel='workouts-panel']"));
 }
 
 function setFormBusy(form, busy) {
@@ -169,8 +179,8 @@ async function loadBillingAccess() {
   if (isGuardian) {
     billingAllowed = Boolean(authorization?.billing_enabled);
     billingAccessMessage.textContent = billingAllowed
-      ? "You are signed in with the linked parent or guardian billing account. Billing is enabled."
-      : "You are signed in with the linked parent or guardian account, but billing is not enabled.";
+      ? "You are signed in with a linked billing account. Billing is enabled."
+      : "You are signed in with a linked billing account, but billing is not enabled.";
     billingAccessForm.hidden = true;
     renderBillingActions();
     return;
@@ -209,7 +219,7 @@ async function loadBillingAccess() {
       : !athlete?.date_of_birth
       ? "Billing is unavailable until a coach verifies your date of birth."
       : minor && !authorization?.minor_self_billing_approved
-        ? "A parent or guardian must sign in with their linked billing account."
+        ? "The linked billing account must sign in to manage payment."
         : minor ? "Odyssey has approved a documented exception for billing with this athlete account." : "You may manage billing with this account.";
   }
   renderBillingActions();
@@ -395,16 +405,14 @@ async function showDashboard(activeSession, version) {
       if (guardianError) throw guardianError;
       if (!guardianLinks.length) {
         showAuthView(loginForm);
-        setStatus(authStatus, "This account has not been linked to an athlete or guardian billing role.", "error");
+        setStatus(authStatus, "This account has not been linked to an athlete or billing role.", "error");
         return;
       }
       isGuardian = true;
       document.querySelectorAll(".training-only").forEach((element) => { element.hidden = true; });
-      document.querySelectorAll(".portal-tab").forEach((tab) => tab.classList.remove("is-active"));
-      document.querySelector("[data-panel='billing-panel']").classList.add("is-active");
-      document.querySelector("#billing-panel").hidden = false;
+      activatePortalTab(document.querySelector("[data-panel='billing-panel']"));
       document.querySelector(".portal-dashboard-header h1").textContent = "Billing Portal";
-      document.querySelector(".portal-welcome").textContent = "Parent and guardian membership billing.";
+      document.querySelector(".portal-welcome").textContent = "Billing-only membership access.";
       await loadGuardianAthletes();
     }
   }
@@ -557,8 +565,14 @@ messageForm.addEventListener("submit", async (event) => {
 });
 
 messageComposeButton.addEventListener("click", () => {
-  messageForm.scrollIntoView({ behavior: "smooth", block: "center" });
-  window.setTimeout(() => messageForm.elements.body.focus(), 350);
+  const opening = messageForm.hidden;
+  messageForm.hidden = !opening;
+  messageComposeButton.setAttribute("aria-expanded", String(opening));
+  messageComposeButton.textContent = opening ? "Close Message" : "Write a Message";
+  if (opening) {
+    messageForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => messageForm.elements.body.focus(), 350);
+  }
 });
 
 messageForm.elements.body.addEventListener("keydown", (event) => {
@@ -572,10 +586,19 @@ athleteSelect.addEventListener("change", async () => {
   draftInvoiceRequestId = null;
   await refreshWorkspace();
 });
-document.querySelectorAll(".portal-tab").forEach((tab) => tab.addEventListener("click", () => {
-  document.querySelectorAll(".portal-tab").forEach((item) => item.classList.toggle("is-active", item === tab));
-  document.querySelectorAll(".portal-panel").forEach((panel) => { panel.hidden = panel.id !== tab.dataset.panel; });
-}));
+portalTabs.forEach((tab) => {
+  tab.addEventListener("click", () => activatePortalTab(tab));
+  tab.addEventListener("keydown", (event) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    const visibleTabs = portalTabs.filter((item) => !item.hidden);
+    const currentIndex = visibleTabs.indexOf(tab);
+    const nextIndex = event.key === "Home" ? 0
+      : event.key === "End" ? visibleTabs.length - 1
+      : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + visibleTabs.length) % visibleTabs.length;
+    event.preventDefault();
+    activatePortalTab(visibleTabs[nextIndex], { focus: true });
+  });
+});
 document.querySelector(".logout-button").addEventListener("click", async () => {
   const { error } = await supabaseClient.auth.signOut();
   if (error) setStatus(dashboardStatus, "We couldn't sign you out.", "error");
