@@ -19,7 +19,15 @@
     panels.forEach((panel) => { panel.hidden = panel.dataset.rolePanel !== tab.dataset.role; });
     if (moveFocus) tab.focus();
     announce(`${tab.textContent.trim()} review dashboard loaded. Synthetic data only.`);
-    history.replaceState(null, '', `#${tab.dataset.role}-view`);
+    try {
+      const reviewUrl = new URL(window.location.href);
+      reviewUrl.hash = `${tab.dataset.role}-view`;
+      if (reviewUrl.origin === window.location.origin) {
+        history.replaceState(null, '', reviewUrl.href);
+      }
+    } catch {
+      // Role switching must remain usable when a preview host rewrites the document base URL.
+    }
   };
 
   tabs.forEach((tab, index) => {
