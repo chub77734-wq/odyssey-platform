@@ -1,0 +1,14 @@
+[features]
+multi_agent = true
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
+
+[agents.alpha]
+description = "Customer-facing website and portal UX specialist for visual design, content, accessibility, and browser validation."
+config_file = "agents/alpha.toml"
+
+[agents.beta]
+description = "Backend specialist for Supabase, Postgres, auth, Stripe billing, security, migrations, concurrency, and runtime validation."
+config_file = "agents/beta.toml"
