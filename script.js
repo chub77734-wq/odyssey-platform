@@ -346,7 +346,8 @@ const athleteAccessLinks = document.querySelectorAll(".athlete-access-link");
 
 function updateAthleteAccessLabels(session) {
   athleteAccessLinks.forEach((link) => {
-    link.textContent = session ? "Athlete Portal" : "Athlete Sign In";
+    link.textContent = "The Board";
+    link.setAttribute("aria-label", session ? "The Board" : "The Board sign in");
   });
 }
 
