@@ -1,170 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" class="no-js">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
   <title>Odyssey Athlete Portal</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="portal-next.css?v=public-20260922">
+  <script>document.documentElement.classList.replace('no-js','js')</script>
 </head>
-<body class="portal-body">
+<body class="portal-next-body">
   <a class="skip-link" href="#main-content">Skip to portal content</a>
-  <header class="portal-site-header">
-    <a class="brand" href="index.html" aria-label="Odyssey Track Club homepage"><span class="brand-mark">△</span><span>Odyssey Track Club</span></a>
-    <a class="portal-home-link" href="index.html">Back to Homepage</a>
+  <header class="site-header portal-next-header">
+    <a class="brand" href="https://odysseytrackclub.com/#home" aria-label="Odyssey Track Club home"><span class="brand-mark">△</span><span>Odyssey Track Club</span></a>
+    <div class="portal-header-links"><a href="https://odysseytrackclub.com/#home">Homepage</a><span class="portal-label" aria-current="page">Portal</span></div>
   </header>
-  <main class="portal-page" id="main-content">
-    <section class="portal-card auth-card" aria-labelledby="portal-auth-heading">
-      <div class="portal-auth-story">
-        <p class="eyebrow">Your Odyssey Workspace</p>
-        <h1 id="portal-auth-heading">Athlete Portal</h1>
-        <p class="portal-intro">Your training, coach feedback, and Odyssey conversations in one focused space.</p>
-        <div class="portal-feature-grid" aria-label="Portal features">
-          <article><span aria-hidden="true">01</span><h2>Training</h2><p>Review assigned workouts and coaching notes.</p></article>
-          <article><span aria-hidden="true">02</span><h2>Connection</h2><p>Message your coach and share approved files.</p></article>
-          <article><span aria-hidden="true">03</span><h2>Ownership</h2><p>Keep your goals, profile, and training information in one place.</p></article>
-        </div>
-      </div>
-      <div class="portal-auth-access">
-        <p class="eyebrow">Secure Access</p>
-        <h2>Welcome back.</h2>
-        <p class="portal-auth-note">Invited athletes can finish setup from the link in their invitation email.</p>
-        <p class="portal-status" role="status" aria-live="polite">Checking your account…</p>
-        <noscript><p class="portal-noscript">JavaScript is required to securely sign in to the Athlete Portal.</p></noscript>
-
-      <form class="login-form portal-form" hidden aria-label="Athlete sign in">
-        <label>Email <input type="email" name="email" autocomplete="email" required /></label>
-        <label>Password <input type="password" name="password" autocomplete="current-password" required /></label>
-        <button type="submit" class="button button-primary">Sign In</button>
-        <button type="button" class="portal-link forgot-password-button">Forgot password?</button>
-      </form>
-      <form class="forgot-password-form portal-form" hidden>
-        <label>Email <input type="email" name="email" autocomplete="email" required /></label>
-        <button type="submit" class="button button-primary">Send Reset Link</button>
-        <button type="button" class="portal-link back-to-login-button">Back to sign in</button>
-      </form>
-      <form class="password-form portal-form" hidden>
-        <h2>Set your password</h2>
-        <label>New Password <input type="password" name="password" autocomplete="new-password" minlength="8" required /></label>
-        <label>Confirm New Password <input type="password" name="password_confirm" autocomplete="new-password" minlength="8" required /></label>
-        <button type="submit" class="button button-primary">Save Password</button>
-      </form>
-      </div>
+  <main id="main-content" class="portal-shell" tabindex="-1">
+    <section class="portal-auth" id="portal-auth" hidden aria-labelledby="portal-auth-heading">
+      <div><p class="eyebrow">Odyssey Athlete Portal</p><h1 id="portal-auth-heading">Your work. Your progress.</h1><p>Sign in to access your Odyssey training experience.</p></div>
+      <form id="portal-auth-form"><label>Email<input name="email" type="email" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button class="button primary" type="submit">Sign in</button><p class="form-message" role="alert"></p></form>
+      <div id="portal-account" hidden><p>Signed in as <strong id="portal-account-email"></strong></p><button class="button secondary" id="portal-sign-out" type="button">Sign out</button></div>
     </section>
-
-    <section class="portal-dashboard" hidden>
-      <header class="portal-dashboard-header">
-        <div><p class="eyebrow">Odyssey Track Club</p><h1>Training Portal</h1><p class="portal-welcome"></p></div>
-        <div class="portal-header-actions">
-          <p class="user-greeting">Hi, Athlete</p>
-          <a class="button button-secondary main-site-button" href="index.html">Homepage</a>
-          <button type="button" class="button button-secondary logout-button">Sign Out</button>
-        </div>
-      </header>
-      <p class="dashboard-status portal-status" role="status" aria-live="polite"></p>
-      <div class="coach-athlete-picker" hidden>
-        <label for="athlete-select">Viewing athlete</label>
-        <select id="athlete-select"></select>
-      </div>
-      <nav class="portal-tabs" aria-label="Portal sections" role="tablist">
-        <button type="button" class="portal-tab training-only is-active" id="workouts-tab" data-panel="workouts-panel" role="tab" aria-controls="workouts-panel" aria-selected="true">Workouts</button>
-        <button type="button" class="portal-tab training-only" id="messages-tab" data-panel="messages-panel" role="tab" aria-controls="messages-panel" aria-selected="false" tabindex="-1">Coach Chat</button>
-        <button type="button" class="portal-tab training-only" id="profile-tab" data-panel="profile-panel" role="tab" aria-controls="profile-panel" aria-selected="false" tabindex="-1">Profile</button>
-        <button type="button" class="portal-tab" id="billing-tab" data-panel="billing-panel" role="tab" aria-controls="billing-panel" aria-selected="false" tabindex="-1">Billing</button>
-      </nav>
-
-      <section class="portal-panel training-only" id="workouts-panel" role="tabpanel" aria-labelledby="workouts-tab">
-        <div class="portal-panel-heading"><div><p class="section-kicker">Training plan</p><h2>Assigned Workouts</h2></div><p>Upcoming sessions and coaching notes.</p></div>
-        <form class="workout-form portal-form coach-only" hidden>
-          <h3>Assign a workout</h3>
-          <div class="portal-form-row">
-            <label>Date <input type="date" name="workout_date" required /></label>
-            <label>Title <input type="text" name="title" maxlength="120" required /></label>
-          </div>
-          <label>Workout details <textarea name="details" rows="6" maxlength="5000" required></textarea></label>
-          <button type="submit" class="button button-primary">Assign Workout</button>
-        </form>
-        <div class="workout-list portal-list" aria-live="polite"></div>
-      </section>
-
-      <section class="portal-panel training-only" id="messages-panel" role="tabpanel" aria-labelledby="messages-tab" hidden>
-        <div class="portal-panel-heading">
-          <div><p class="section-kicker">Direct line</p><h2>Coach Chat</h2></div>
-          <div class="message-heading-actions">
-            <p>Share updates, questions, documents, photos, or videos.</p>
-            <button type="button" class="button button-secondary message-compose-button" aria-expanded="false" aria-controls="message-form">Write a Message</button>
-          </div>
-        </div>
-        <form class="message-form portal-form" id="message-form" hidden>
-          <label for="message-body">Message</label>
-          <div class="message-composer-row">
-            <textarea id="message-body" name="body" rows="4" maxlength="4000" placeholder="Write an update or question…"></textarea>
-            <button type="submit" class="button button-primary">Send Message</button>
-          </div>
-          <label class="file-field">Add a file <span>PDF, Word, JPG, PNG, WebP, MP4, or MOV — maximum 20 MB</span><input type="file" name="attachment" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.mp4,.mov" /></label>
-        </form>
-        <div class="message-list" aria-live="polite"></div>
-      </section>
-
-      <section class="portal-panel training-only" id="profile-panel" role="tabpanel" aria-labelledby="profile-tab" hidden>
-        <div class="portal-panel-heading"><div><p class="section-kicker">Athlete details</p><h2>Profile</h2></div><p>Keep training information current for better coaching.</p></div>
-        <form class="athlete-profile-form portal-form">
-          <label>Full Name <input type="text" name="full_name" autocomplete="name" required /></label>
-          <div class="portal-form-row">
-            <label>Age Group <input type="text" name="age_group" /></label>
-            <label>Primary Event <input type="text" name="primary_event" /></label>
-          </div>
-          <label>Goals <textarea name="goals" rows="5"></textarea></label>
-          <button type="submit" class="button button-primary">Save Profile</button>
-        </form>
-      </section>
-
-      <section class="portal-panel" id="billing-panel" role="tabpanel" aria-labelledby="billing-tab" hidden>
-        <div class="portal-panel-heading"><div><p class="section-kicker">Membership</p><h2>Billing</h2></div><p>Secure payments and invoices are handled by Stripe.</p></div>
-        <div class="billing-card" aria-live="polite">
-          <div>
-            <p class="billing-label">Membership status</p>
-            <p class="billing-status">Loading…</p>
-            <p class="billing-detail"></p>
-          </div>
-          <div class="billing-actions athlete-only">
-            <button type="button" class="button button-primary start-membership-button" hidden>Start Membership</button>
-            <button type="button" class="button button-secondary manage-billing-button" hidden>Manage Billing</button>
-          </div>
-        </div>
-        <p class="billing-access-message"></p>
-        <form class="billing-access-form portal-form coach-only" hidden>
-          <h3>Billing authorization</h3>
-          <p class="billing-form-help">Date of birth is coach-controlled and determines whether guardian credentials are required.</p>
-          <label>Date of Birth <input type="date" name="date_of_birth" required /></label>
-          <label>Guardian Account Email <input type="email" name="guardian_email" autocomplete="off" /><span>Invite this email through Supabase Authentication first. Leave blank to keep the currently linked guardian.</span></label>
-          <label class="checkbox-field"><input type="checkbox" name="manual_approval" /> Manually approve this minor to bill using their own athlete credentials</label>
-          <label class="manual-approval-note" hidden>Approval Note <textarea name="approval_note" rows="3" minlength="10" maxlength="1000" placeholder="Document why this exception was approved."></textarea></label>
-          <label class="checkbox-field"><input type="checkbox" name="billing_enabled" /> Enable discretionary billing for this athlete</label>
-          <label>Billing Enablement Note <textarea name="billing_enabled_note" rows="2" maxlength="1000" placeholder="Optional reason or scope for enabling billing."></textarea></label>
-          <button type="submit" class="button button-primary">Save Billing Authorization</button>
-        </form>
-        <section class="invoice-section">
-          <div class="invoice-section-heading"><h3>One-off invoices</h3><p>Create an inert draft first. Finalizing and sending always requires a separate confirmation.</p></div>
-          <form class="draft-invoice-form portal-form coach-only" hidden>
-            <h3>Create draft invoice</h3>
-            <div class="portal-form-row"><label>Amount (USD) <input type="number" name="amount" min="1" max="10000" step="0.01" required /></label><label>Due Date <input type="date" name="due_date" required /></label></div>
-            <label>Description <textarea name="description" rows="3" minlength="5" maxlength="500" required></textarea></label>
-            <button type="submit" class="button button-secondary">Create Draft Only</button>
-          </form>
-          <form class="send-invoice-form portal-form coach-only" hidden>
-            <h3>Finalize and send a reviewed draft</h3>
-            <label>Exact Draft Invoice ID <input type="text" name="invoice_id" pattern="in_[A-Za-z0-9]+" placeholder="in_…" required /></label>
-            <label>Confirmation Phrase <input type="text" name="confirmation" placeholder="FINALIZE_AND_SEND" required /></label>
-            <button type="submit" class="button button-primary">Finalize and Send</button>
-          </form>
-          <div class="invoice-list portal-list" aria-live="polite"></div>
-        </section>
-        <p class="billing-note">Odyssey never receives or stores your card details. Stripe securely handles payment information, receipts, and billing changes.</p>
-      </section>
+    <section id="portal-app" hidden>
+      <div class="portal-heading"><div><p class="eyebrow" id="portal-role-label"></p><h1 id="portal-page-title"></h1><p id="portal-page-intro"></p></div><button class="button secondary" id="portal-app-sign-out" type="button">Sign out</button></div>
+      <nav class="portal-page-nav" id="portal-page-nav" aria-label="Portal pages"></nav>
+      <p class="app-status" id="app-status" role="status" aria-live="polite"></p>
+      <div id="portal-page-content"></div>
     </section>
+    <noscript><section class="portal-notice"><h1>JavaScript is required</h1><p>Turn on JavaScript to securely sign in to the Odyssey Athlete Portal.</p></section></noscript>
   </main>
-  <footer class="portal-footer"><p>Need help accessing your account?</p><a href="mailto:odysseytrackclub@gmail.com">odysseytrackclub@gmail.com</a></footer>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="portal.js"></script>
+  <footer class="portal-next-footer"><strong>Odyssey Track Club</strong><a href="mailto:odysseytrackclub@gmail.com">Contact Odyssey</a></footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+  <script src="portal-config.js?v=public-20260922"></script>
+  <script src="portal-adapter.js?v=public-20260922"></script>
+  <script src="portal.js?v=public-20260922"></script>
 </body>
 </html>

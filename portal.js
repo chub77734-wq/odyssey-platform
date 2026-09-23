@@ -1,708 +1,101 @@
-document.documentElement.classList.add("js");
-
-const SUPABASE_KEY = "sb_publishable_UKztkCcChAcgx7ATcoeFIA_76EP9Ytl";
-const SUPABASE_URL = "https://ijasonewhoizpqzwymot.supabase.co";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const authCard = document.querySelector(".auth-card");
-const dashboard = document.querySelector(".portal-dashboard");
-const loginForm = document.querySelector(".login-form");
-const forgotForm = document.querySelector(".forgot-password-form");
-const passwordForm = document.querySelector(".password-form");
-const profileForm = document.querySelector(".athlete-profile-form");
-const workoutForm = document.querySelector(".workout-form");
-const messageForm = document.querySelector(".message-form");
-const authStatus = authCard.querySelector(".portal-status");
-const dashboardStatus = document.querySelector(".dashboard-status");
-const athletePicker = document.querySelector(".coach-athlete-picker");
-const athleteSelect = document.querySelector("#athlete-select");
-const workoutList = document.querySelector(".workout-list");
-const messageList = document.querySelector(".message-list");
-const messageComposeButton = document.querySelector(".message-compose-button");
-const userGreeting = document.querySelector(".user-greeting");
-const billingStatus = document.querySelector(".billing-status");
-const billingDetail = document.querySelector(".billing-detail");
-const billingActions = document.querySelector(".billing-actions");
-const billingAccessMessage = document.querySelector(".billing-access-message");
-const billingAccessForm = document.querySelector(".billing-access-form");
-const manualApprovalCheckbox = billingAccessForm.elements.manual_approval;
-const manualApprovalNote = document.querySelector(".manual-approval-note");
-const billingEnabledCheckbox = billingAccessForm.elements.billing_enabled;
-const draftInvoiceForm = document.querySelector(".draft-invoice-form");
-const sendInvoiceForm = document.querySelector(".send-invoice-form");
-const invoiceList = document.querySelector(".invoice-list");
-const startMembershipButton = document.querySelector(".start-membership-button");
-const manageBillingButton = document.querySelector(".manage-billing-button");
-const authForms = [loginForm, forgotForm, passwordForm];
-const portalTabs = Array.from(document.querySelectorAll(".portal-tab"));
-const portalPanels = Array.from(document.querySelectorAll(".portal-panel"));
-const hashParams = new URLSearchParams(window.location.hash.slice(1));
-const authFlowType = hashParams.get("type");
-const authLinkError = hashParams.get("error_description");
-const billingReturn = new URLSearchParams(window.location.search).get("billing");
-let needsPasswordUpdate = authFlowType === "invite" || authFlowType === "recovery";
-let authStateVersion = 0;
-let session = null;
-let selectedAthleteId = null;
-let isCoach = false;
-let isGuardian = false;
-let billingRecord = null;
-let billingAllowed = false;
-let draftInvoiceRequestId = null;
-
-function setStatus(target, message, type = "info") {
-  target.textContent = message;
-  target.dataset.type = type;
-}
-
-function showAuthView(view) {
-  authForms.forEach((form) => { form.hidden = form !== view; });
-  authCard.hidden = false;
-  dashboard.hidden = true;
-}
-
-function activatePortalTab(tab, { focus = false } = {}) {
-  portalTabs.forEach((item) => {
-    const active = item === tab;
-    item.classList.toggle("is-active", active);
-    item.setAttribute("aria-selected", String(active));
-    item.tabIndex = active ? 0 : -1;
-  });
-  portalPanels.forEach((panel) => { panel.hidden = panel.id !== tab.dataset.panel; });
-  if (focus) tab.focus();
-}
-
-function resetPortalRoleView() {
-  document.querySelector(".portal-dashboard-header h1").textContent = "Training Portal";
-  document.querySelectorAll(".training-only").forEach((element) => { element.hidden = false; });
-  activatePortalTab(document.querySelector("[data-panel='workouts-panel']"));
-}
-
-function setFormBusy(form, busy) {
-  Array.from(form.elements).forEach((control) => { control.disabled = busy; });
-}
-
-function escapeHtml(value = "") {
-  const element = document.createElement("div");
-  element.textContent = value;
-  return element.innerHTML;
-}
-
-function firstNameFrom(value = "") {
-  return value.trim().split(/\s+/)[0] || "Athlete";
-}
-
-function accountDisplayName() {
-  const metadata = session?.user?.user_metadata || {};
-  const metadataName = metadata.first_name || metadata.full_name || metadata.name;
-  if (metadataName) return firstNameFrom(metadataName);
-
-  const emailName = session?.user?.email?.split("@")[0].split(/[._-]/)[0] || "Athlete";
-  return emailName.charAt(0).toUpperCase() + emailName.slice(1);
-}
-
-function setUserGreeting(name) {
-  userGreeting.textContent = `Hi, ${firstNameFrom(name || accountDisplayName())}`;
-}
-
-function formatDate(value, withTime = false) {
-  const date = new Date(withTime ? value : `${value}T12:00:00`);
-  const options = withTime
-    ? { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }
-    : { weekday: "short", month: "short", day: "numeric" };
-  return new Intl.DateTimeFormat("en-US", options).format(date);
-}
-
-function formatBillingStatus(status) {
-  const labels = {
-    active: "Active", trialing: "Trial", past_due: "Past due", unpaid: "Unpaid",
-    paused: "Paused", canceled: "Canceled", incomplete: "Payment incomplete",
-    incomplete_expired: "Not active"
+(() => {
+  'use strict';
+  const config=window.ODYSSEY_PORTAL_CONFIG,homePath=config?.homePath||'portal.html';
+  const ROUTES={athlete:[['Home',homePath],['Training','portal-training.html'],['Messages','portal-messages.html'],['Schedule','portal-schedule.html'],['Progress','portal-progress.html']],coach:[['Home','coach-portal.html'],['Attendance','coach-attendance.html'],['Messages','coach-messages.html'],['Assignments','coach-assignments.html'],['Review','coach-review.html']],guardian:[['Account','guardian-portal.html']]};
+  const PAGES={'portal.html':['athlete','Home'],'portal-training.html':['athlete','Training'],'portal-messages.html':['athlete','Messages'],'portal-schedule.html':['athlete','Schedule'],'portal-progress.html':['athlete','Progress'],'coach-portal.html':['coach','Home'],'coach-attendance.html':['coach','Attendance'],'coach-messages.html':['coach','Messages'],'coach-assignments.html':['coach','Assignments'],'coach-review.html':['coach','Review'],'guardian-portal.html':['guardian','Account']};
+  const file=location.pathname.split('/').pop()||homePath,requested=PAGES[file]||PAGES[homePath]||PAGES['portal.html'];
+  const requestedAccountFlow=new URLSearchParams(location.search).get('account');
+  const callbackType=new URLSearchParams(location.hash.slice(1)).get('type');
+  const accountFlow=['invite','recovery'].includes(requestedAccountFlow)?requestedAccountFlow:(['invite','recovery'].includes(callbackType)?callbackType:null);
+  const auth=document.querySelector('#portal-auth'),authForm=document.querySelector('#portal-auth-form'),app=document.querySelector('#portal-app'),content=document.querySelector('#portal-page-content'),nav=document.querySelector('#portal-page-nav'),status=document.querySelector('#app-status');
+  auth.hidden=true;
+  let adapter,client,passwordFlow=accountFlow==='recovery'||accountFlow==='invite';
+  const e=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n};
+  const panel=(k,t,wide=false)=>{const n=e('section',`portal-panel${wide?' wide':''}`);n.append(e('p','kicker',k),e('h2','',t));return n};
+  const record=(t,m)=>{const n=e('article','portal-record');n.append(e('strong','',t),e('span','',m));return n};
+  const fmt=(v,time=false)=>v?new Intl.DateTimeFormat('en-US',time?{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}:{weekday:'short',month:'short',day:'numeric'}).format(new Date(v)):'Date unavailable';
+  const metricLabels={acceleration_10m:'10m acceleration',acceleration_20m:'20m acceleration',flying_20m:'Flying 20m',sprint_60m:'60m sprint',sprint_100m:'100m sprint',standing_broad_jump:'Standing broad jump'};
+  const unitLabels={s:'seconds',sec:'seconds',seconds:'seconds',m:'meters',cm:'centimeters'};
+  const statusLabels={draft:'Draft',published:'Published',completed:'Completed',canceled:'Canceled'};
+  const metricName=value=>metricLabels[String(value||'').toLowerCase()]||'Performance result';
+  const unitName=value=>unitLabels[String(value||'').toLowerCase()]||'';
+  const statusName=value=>statusLabels[String(value||'').toLowerCase()]||'Training plan';
+  const url=f=>f;
+  const fail=()=>{status.textContent='We could not complete that action. Please try again.'};
+  const setFormBusy=(form,busy)=>{form.setAttribute('aria-busy',String(busy));form.querySelectorAll('button,input,select,textarea').forEach(control=>control.disabled=busy)};
+  const buildAdapter=()=>{if(!config?.supabaseUrl||!config?.supabasePublishableKey||!window.supabase?.createClient||typeof window.createOdysseyPortalAdapter!=='function')return null;client=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});client.auth.onAuthStateChange(event=>{if(event==='PASSWORD_RECOVERY'){passwordFlow=true;queueMicrotask(()=>showPasswordForm())}});return window.createOdysseyPortalAdapter({client})};
+  const singleRole=roles=>Array.isArray(roles)&&roles.length===1?roles[0]:null;
+  const enforce=role=>{if(requested[0]===role)return true;location.replace(url(ROUTES[role]?.[0]?.[1]||'portal.html'));return false};
+  const heading=(role,page)=>{const names={athlete:{Home:'Athlete home',Training:'Training',Messages:'Contact coach',Schedule:'Schedule',Progress:'Progress'},coach:{Home:'Coach home',Attendance:'Attendance',Messages:'Athlete messages',Assignments:'Assignments',Review:'Review'},guardian:{Account:'Account'}};document.querySelector('#portal-role-label').textContent=role==='guardian'?'Parent / guardian':role;document.querySelector('#portal-page-title').textContent=names[role][page];document.querySelector('#portal-page-intro').textContent=role==='athlete'?'Own the work. Stay connected. Track what comes next.':role==='coach'?'Guide the work with clarity and consistency.':'Manage consent and account information.';document.title=`${names[role][page]} | Odyssey Portal`};
+  const buildNav=role=>nav.replaceChildren(...ROUTES[role].map(([label,target])=>{const a=e('a','',label);a.href=url(target);if(target===file)a.setAttribute('aria-current','page');return a}));
+  const authForms=e('div','portal-auth-forms'),forgotButton=e('button','portal-auth-link','Forgot password?'),resetForm=e('form','portal-form'),passwordForm=e('form','portal-form');
+  authForm.before(authForms);authForms.append(authForm,resetForm,passwordForm);forgotButton.type='button';authForm.insertBefore(forgotButton,authForm.querySelector('.form-message'));
+  resetForm.hidden=true;resetForm.innerHTML='<h2>Reset your password</h2><p class="portal-muted">Enter your account email and we will send a secure reset link.</p><label>Email<input name="email" type="email" autocomplete="email" required></label><button class="button primary" type="submit">Send reset link</button><button class="portal-auth-link" type="button" data-auth-back>Back to sign in</button><p class="form-message" role="status"></p>';
+  passwordForm.hidden=true;passwordForm.innerHTML=`<h2>${accountFlow==='invite'?'Create your password':'Choose a new password'}</h2><p class="portal-muted">Use at least eight characters.</p><label>New password<input name="password" type="password" minlength="8" autocomplete="new-password" required></label><label>Confirm new password<input name="confirm_password" type="password" minlength="8" autocomplete="new-password" required></label><button class="button primary" type="submit">Save password</button><p class="form-message" role="status"></p>`;
+  if(config?.showBetaNotice){const notice=e('aside','portal-beta-notice'),label=e('strong','','Invited preview'),copy=e('p','','This preview uses sample accounts and sample training information. Nothing here changes an Odyssey member account.');notice.setAttribute('aria-label','Invited preview');notice.append(label,copy);auth.before(notice)}
+  const showAuthForm=form=>{auth.hidden=false;app.hidden=true;[authForm,resetForm,passwordForm].forEach(item=>item.hidden=item!==form)};
+  const showPasswordForm=()=>{showAuthForm(passwordForm);passwordForm.querySelector('input')?.focus()};
+  const recoveryUrl=()=>{const target=new URL(homePath,location.href);target.search='';target.hash='';target.searchParams.set('account','recovery');return target.href};
+  forgotButton.addEventListener('click',()=>{showAuthForm(resetForm);resetForm.querySelector('input')?.focus()});resetForm.querySelector('[data-auth-back]').addEventListener('click',()=>{showAuthForm(authForm);authForm.querySelector('input')?.focus()});
+  resetForm.addEventListener('submit',async ev=>{ev.preventDefault();const msg=resetForm.querySelector('.form-message');msg.textContent='';if(!resetForm.reportValidity())return;try{await adapter.requestPasswordReset({email:new FormData(resetForm).get('email'),redirectTo:recoveryUrl()});resetForm.reset();msg.textContent='If that email belongs to an invited account, a reset link is on the way.'}catch{msg.textContent='We could not send a reset link right now. Please try again.'}});
+  passwordForm.addEventListener('submit',async ev=>{ev.preventDefault();const msg=passwordForm.querySelector('.form-message'),values=Object.fromEntries(new FormData(passwordForm));msg.textContent='';if(!passwordForm.reportValidity())return;if(values.password!==values.confirm_password){msg.textContent='The passwords do not match.';return}try{await adapter.updatePassword({password:values.password})}catch{msg.textContent='We could not save your password. Request a new link and try again.';return}passwordFlow=false;history.replaceState({},'',homePath);try{const result=await adapter.initialize();if(result.signedIn)await signedIn(result.user,result.roles);else{showAuthForm(authForm);authForm.querySelector('.form-message').textContent='Your password was saved. Sign in to continue.'}}catch{showAuthForm(authForm);authForm.querySelector('.form-message').textContent='Your password was saved. Please contact Odyssey to confirm your portal access.'}});
+  const renderAthleteHome=data=>{const grid=e('div','portal-grid'),work=panel('Today','Upcoming training',true),messages=panel('Coach connection','Latest message'),schedule=panel('Next session','Schedule');if(data.plans.length)data.plans.slice(0,2).forEach(({training_plans:p})=>work.append(record(p.title,`${fmt(p.planned_date)} · Week ${p.training_week}`)));else work.append(e('p','portal-muted','No published training has been assigned yet.'));const latest=data.messages[0];messages.append(latest?record(latest.body,fmt(latest.created_at,true)):e('p','portal-muted','No messages yet.'));const next=data.sessions[0];schedule.append(next?record(next.title,`${fmt(next.starts_at,true)} · ${next.location}`):e('p','portal-muted','No open sessions right now.'));grid.append(work,messages,schedule);content.replaceChildren(grid)};
+  const renderTraining=data=>{const grid=e('div','portal-grid'),work=panel('Assigned by your coach','Upcoming work',true);if(!data.plans.length)work.append(e('p','portal-muted','No published training has been assigned yet.'));data.plans.forEach(({plan_id:id,training_plans:p})=>{const card=record(p.title,`${fmt(p.planned_date)} · Week ${p.training_week}`),blocks=e('div','portal-list');(p.training_plan_sections||[]).sort((a,b)=>a.sort_order-b.sort_order).forEach(s=>{const d=document.createElement('details'),sum=document.createElement('summary'),ul=e('ul','portal-list');sum.textContent=s.heading;(s.training_plan_items||[]).sort((a,b)=>a.sort_order-b.sort_order).forEach(i=>ul.append(e('li','',[i.exercise,i.sets&&`${i.sets} sets`,i.reps,i.intensity].filter(Boolean).join(' · '))));d.append(sum,ul);blocks.append(d)});card.append(blocks);const form=e('form','portal-form');form.innerHTML='<div class="portal-form-row"><label>Workout status<select name="completion_status" required><option value="">Choose status</option><option value="completed">Completed</option><option value="partial">Partially completed</option><option value="missed">Missed</option></select></label><label>Effort (1–10)<input name="effort" type="number" min="1" max="10"></label></div><label>Note for your coach<textarea name="note" rows="3" maxlength="2000"></textarea></label><div class="portal-actions"><button class="button primary" type="submit">Save check-in</button></div><p class="form-message" role="status"></p>';form.addEventListener('submit',async ev=>{ev.preventDefault();if(!form.reportValidity())return;const values=Object.fromEntries(new FormData(form));setFormBusy(form,true);try{await adapter.saveCheckIn({planId:id,...values});form.querySelector('.form-message').textContent='Check-in saved.'}catch{form.querySelector('.form-message').textContent='We could not save your check-in. Please try again.'}finally{setFormBusy(form,false)}});card.append(form);work.append(card)});grid.append(work);content.replaceChildren(grid)};
+  const appendMessage=(history,message,isYou=false)=>{const bubble=e('article',`portal-message${isYou?' is-you':''}`);bubble.append(e('p','',message.body),e('small','',fmt(message.created_at,true)));history.append(bubble)};
+  const bindEnterToSend=(textarea,form)=>textarea.addEventListener('keydown',ev=>{if(ev.key!=='Enter'||ev.shiftKey||ev.isComposing||ev.keyCode===229)return;ev.preventDefault();if(textarea.value.trim())form.requestSubmit();else form.querySelector('.form-message').textContent='Enter a message before sending.'});
+  const renderAthleteMessages=data=>{const shell=e('section','portal-chat'),coach=data.assignedCoach?.displayName||'Your assigned coach',head=e('header','portal-panel'),history=e('div','portal-chat-history');head.append(e('p','kicker','Contact coach'),e('h2','',coach));history.setAttribute('aria-label',`Conversation with ${coach}`);if(!data.messages.length)history.append(e('p','portal-muted','No messages yet.'));[...data.messages].reverse().forEach(m=>appendMessage(history,m,m.sender_user_id===data.userId));const form=e('form','portal-chat-form');form.innerHTML=`<label for="chat-message">Message coach</label><textarea id="chat-message" name="body" maxlength="4000" required placeholder="Message coach…"></textarea><button class="button primary" type="submit">Send</button><p class="form-message" role="status"></p>`;const textarea=form.querySelector('textarea');form.querySelector('label').textContent=`Message ${coach}`;textarea.placeholder=`Message ${coach}…`;bindEnterToSend(textarea,form);form.addEventListener('submit',async ev=>{ev.preventDefault();const body=String(new FormData(form).get('body')||'').trim();if(!body){form.querySelector('.form-message').textContent='Enter a message before sending.';return}if(!form.reportValidity())return;setFormBusy(form,true);try{const sent=await adapter.sendMessage({body});appendMessage(history,{...sent,body,created_at:sent?.created_at||new Date().toISOString()},true);form.reset();form.querySelector('.form-message').textContent='Message sent.';history.scrollTop=history.scrollHeight}catch{form.querySelector('.form-message').textContent='We could not send your message. Please try again.'}finally{setFormBusy(form,false)}});shell.append(head,history,form);content.replaceChildren(shell);adapter.markMessagesRead({}).catch(()=>{});requestAnimationFrame(()=>history.scrollTop=history.scrollHeight)};
+  const renderCoachMessages=data=>{
+    const shell=e('section','portal-grid'),list=e('nav','portal-panel'),thread=e('section','portal-panel'),threads=data.messageThreads||[],buttons=new Map();
+    list.setAttribute('aria-label','Athlete conversations');list.append(e('p','kicker','Messages'),e('h2','','Athletes'));
+    const renderThread=athlete=>{
+      const messages=athlete.messages||[],history=e('div','portal-chat-history'),form=e('form','portal-chat-form');
+      thread.replaceChildren(e('p','kicker','Conversation'),e('h2','',athlete.displayName));history.setAttribute('aria-label',`Conversation with ${athlete.displayName}`);
+      if(!messages.length)history.append(e('p','portal-muted','No messages with this athlete yet.'));messages.forEach(m=>appendMessage(history,m,m.sender_user_id===data.userId));
+      form.innerHTML='<label for="coach-chat-message">Message athlete</label><textarea id="coach-chat-message" name="body" maxlength="4000" required placeholder="Write a message…"></textarea><button class="button primary" type="submit">Send</button><p class="form-message" role="status"></p>';
+      const textarea=form.querySelector('textarea');bindEnterToSend(textarea,form);
+      form.addEventListener('submit',async ev=>{ev.preventDefault();const msg=form.querySelector('.form-message'),body=String(new FormData(form).get('body')||'').trim();if(!body){msg.textContent='Enter a message before sending.';return}if(!form.reportValidity())return;setFormBusy(form,true);try{const sent=await adapter.sendMessage({athleteId:athlete.athleteId,body});const message={...sent,body,created_at:sent?.created_at||new Date().toISOString(),sender_user_id:data.userId};messages.push(message);appendMessage(history,message,true);form.reset();msg.textContent='Message sent.';history.scrollTop=history.scrollHeight}catch{msg.textContent='We could not send your message. Please try again.'}finally{setFormBusy(form,false)}});
+      thread.append(history,form);list.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.athleteId===athlete.athleteId)));
+      adapter.markMessagesRead({athleteId:athlete.athleteId}).then(()=>{athlete.unreadCount=0;const button=buttons.get(athlete.athleteId);if(button)button.textContent=`${athlete.displayName} · 0 unread`}).catch(()=>{});
+      requestAnimationFrame(()=>history.scrollTop=history.scrollHeight);
+    };
+    threads.forEach(athlete=>{const button=e('button','button secondary',`${athlete.displayName} · ${athlete.unreadCount} unread`);button.type='button';button.dataset.athleteId=athlete.athleteId;button.addEventListener('click',()=>renderThread(athlete));buttons.set(athlete.athleteId,button);list.append(button)});
+    if(!threads.length){list.append(e('p','portal-muted','No assigned athletes.'));thread.append(e('p','portal-muted','No conversations are available.'))}shell.append(list,thread);content.replaceChildren(shell);if(threads.length)renderThread(threads.find(a=>a.athleteId===data.athleteId)||threads[0]);
   };
-  return labels[status] || "Not started";
-}
-
-function isUnder18(dateOfBirth) {
-  if (!dateOfBirth) return null;
-  const dob = new Date(`${dateOfBirth}T00:00:00Z`);
-  const today = new Date();
-  let age = today.getUTCFullYear() - dob.getUTCFullYear();
-  if (today.getUTCMonth() < dob.getUTCMonth() ||
-    (today.getUTCMonth() === dob.getUTCMonth() && today.getUTCDate() < dob.getUTCDate())) age -= 1;
-  return age < 18;
-}
-
-function renderBillingActions() {
-  const status = billingRecord?.subscription_status || null;
-  const hasCustomer = Boolean(billingRecord);
-  const canStart = !status || ["canceled", "incomplete_expired"].includes(status);
-  billingActions.hidden = isCoach || !billingAllowed;
-  startMembershipButton.hidden = isCoach || !billingAllowed || !canStart;
-  manageBillingButton.hidden = isCoach || !billingAllowed || !hasCustomer;
-}
-
-async function loadBilling() {
-  if (!selectedAthleteId) {
-    billingStatus.textContent = "No athlete selected";
-    billingDetail.textContent = "Select an athlete to view membership status.";
-    startMembershipButton.hidden = true;
-    manageBillingButton.hidden = true;
-    return;
-  }
-  const { data, error } = await supabaseClient.from("billing_accounts")
-    .select("subscription_status, current_period_end, cancel_at_period_end, scheduled_cancel_at")
-    .eq("athlete_id", selectedAthleteId).maybeSingle();
-  if (error) throw error;
-  billingRecord = data;
-  const status = billingRecord?.subscription_status || null;
-  billingStatus.textContent = formatBillingStatus(status);
-  billingStatus.dataset.status = status || "not_started";
-  const billingDate = data?.scheduled_cancel_at || data?.current_period_end;
-  if (billingDate) {
-    billingDetail.textContent = `${data.cancel_at_period_end ? "Access ends" : "Current period renews"} ${formatDate(billingDate, true)}.`;
-  } else {
-    billingDetail.textContent = isCoach
-      ? "This athlete has not started a membership."
-      : "Start your membership when you are ready.";
-  }
-  renderBillingActions();
-}
-
-async function loadBillingAccess() {
-  if (!selectedAthleteId) return;
-  const { data: authorization, error: authorizationError } = await supabaseClient
-    .from("athlete_billing_authorizations")
-    .select("athlete_id, athlete_display_name, guardian_configured, minor_self_billing_approved, billing_enabled")
-    .eq("athlete_id", selectedAthleteId).maybeSingle();
-  if (authorizationError) throw authorizationError;
-
-  if (isGuardian) {
-    billingAllowed = Boolean(authorization?.billing_enabled);
-    billingAccessMessage.textContent = billingAllowed
-      ? "You are signed in with a linked billing account. Billing is enabled."
-      : "You are signed in with a linked billing account, but billing is not enabled.";
-    billingAccessForm.hidden = true;
-    renderBillingActions();
-    return;
-  }
-
-  const { data: athlete, error: athleteError } = await supabaseClient.from("athlete_profiles")
-    .select("date_of_birth").eq("id", selectedAthleteId).maybeSingle();
-  if (athleteError) throw athleteError;
-  const minor = isUnder18(athlete?.date_of_birth);
-
-  if (isCoach) {
-    billingAllowed = false;
-    billingAccessForm.hidden = false;
-    billingAccessForm.elements.date_of_birth.value = athlete?.date_of_birth || "";
-    billingAccessForm.elements.guardian_email.value = "";
-    manualApprovalCheckbox.checked = Boolean(authorization?.minor_self_billing_approved);
-    billingEnabledCheckbox.checked = Boolean(authorization?.billing_enabled);
-    billingAccessForm.elements.approval_note.value = "";
-    manualApprovalNote.hidden = !manualApprovalCheckbox.checked;
-    billingAccessForm.elements.approval_note.required = manualApprovalCheckbox.checked;
-    billingAccessMessage.textContent = !authorization?.billing_enabled
-      ? "Discretionary billing is OFF for this athlete."
-      : !athlete?.date_of_birth
-      ? "Billing is blocked until a coach verifies date of birth."
-      : minor && !authorization?.minor_self_billing_approved
-        ? authorization?.guardian_configured
-          ? "Minor billing requires the linked guardian's credentials."
-          : "Minor billing is blocked until a guardian is linked or a manual exception is approved."
-        : minor ? "This minor has a documented manual self-billing exception." : "This athlete is currently 18 or older.";
-  } else {
-    billingAccessForm.hidden = true;
-    billingAllowed = Boolean(authorization?.billing_enabled) && Boolean(athlete?.date_of_birth) &&
-      (minor === false || Boolean(authorization?.minor_self_billing_approved));
-    billingAccessMessage.textContent = !authorization?.billing_enabled
-      ? "Billing is not currently enabled for this athlete."
-      : !athlete?.date_of_birth
-      ? "Billing is unavailable until a coach verifies your date of birth."
-      : minor && !authorization?.minor_self_billing_approved
-        ? "The linked billing account must sign in to manage payment."
-        : minor ? "Odyssey has approved a documented exception for billing with this athlete account." : "You may manage billing with this account.";
-  }
-  renderBillingActions();
-}
-
-async function loadInvoices() {
-  if (!selectedAthleteId) {
-    invoiceList.innerHTML = '<p class="empty-state">No athlete selected.</p>';
-    return;
-  }
-  const { data, error } = await supabaseClient.from("billing_invoices")
-    .select("stripe_invoice_id, amount_cents, currency, description, due_date, status, hosted_invoice_url, invoice_pdf, sent_at, created_at")
-    .eq("athlete_id", selectedAthleteId).order("created_at", { ascending: false });
-  if (error) throw error;
-  invoiceList.innerHTML = data.length ? data.map((invoice) => {
-    const amount = new Intl.NumberFormat("en-US", { style: "currency", currency: invoice.currency.toUpperCase() })
-      .format(invoice.amount_cents / 100);
-    const links = [
-      invoice.hosted_invoice_url ? `<a href="${escapeHtml(invoice.hosted_invoice_url)}" target="_blank" rel="noopener">Open invoice</a>` : "",
-      invoice.invoice_pdf ? `<a href="${escapeHtml(invoice.invoice_pdf)}" target="_blank" rel="noopener">PDF</a>` : ""
-    ].filter(Boolean).join(" · ");
-    return `<article class="invoice-item"><div><p class="invoice-status">${escapeHtml(invoice.status)}</p><h4>${escapeHtml(invoice.description)}</h4><p>${amount} · Due ${formatDate(invoice.due_date)}</p></div><div><code>${escapeHtml(invoice.stripe_invoice_id)}</code>${links ? `<p>${links}</p>` : ""}</div></article>`;
-  }).join("") : '<p class="empty-state">No one-off invoices.</p>';
-}
-
-function showSignedOut(message = "Sign in to access your training portal.", type = "info") {
-  needsPasswordUpdate = false;
-  session = null;
-  selectedAthleteId = null;
-  showAuthView(loginForm);
-  setStatus(authStatus, message, type);
-}
-
-async function loadProfile() {
-  if (!selectedAthleteId) return;
-  const { data, error } = await supabaseClient.from("athlete_profiles")
-    .select("id, full_name, age_group, primary_event, goals").eq("id", selectedAthleteId).maybeSingle();
-  if (error) throw error;
-  profileForm.elements.full_name.value = data?.full_name || "";
-  profileForm.elements.age_group.value = data?.age_group || "";
-  profileForm.elements.primary_event.value = data?.primary_event || "";
-  profileForm.elements.goals.value = data?.goals || "";
-  if (!isCoach) setUserGreeting(data?.full_name);
-  document.querySelector(".portal-welcome").textContent = isCoach
-    ? "Coach workspace — assign training and stay connected."
-    : `Welcome${data?.full_name ? `, ${data.full_name}` : ""}. Here is your Odyssey training space.`;
-}
-
-async function loadAthletes() {
-  const { data, error } = await supabaseClient.from("athlete_profiles").select("id, full_name").order("full_name");
-  if (error) throw error;
-  athleteSelect.innerHTML = data.length
-    ? data.map((athlete) => `<option value="${athlete.id}">${escapeHtml(athlete.full_name || "Profile incomplete")}</option>`).join("")
-    : '<option value="">No athletes yet</option>';
-  selectedAthleteId = data[0]?.id || null;
-  athleteSelect.value = selectedAthleteId || "";
-}
-
-async function loadGuardianAthletes() {
-  const { data, error } = await supabaseClient.from("athlete_billing_authorizations")
-    .select("athlete_id, athlete_display_name").order("athlete_display_name");
-  if (error) throw error;
-  athleteSelect.innerHTML = data.map((athlete) =>
-    `<option value="${athlete.athlete_id}">${escapeHtml(athlete.athlete_display_name)}</option>`).join("");
-  selectedAthleteId = data[0]?.athlete_id || null;
-  athleteSelect.value = selectedAthleteId || "";
-  athletePicker.hidden = data.length <= 1;
-  athletePicker.querySelector("label").textContent = "Managing membership for";
-}
-
-async function loadWorkouts() {
-  if (!selectedAthleteId) {
-    workoutList.innerHTML = '<p class="empty-state">Select an athlete to view workouts.</p>';
-    return;
-  }
-  const { data, error } = await supabaseClient.from("workouts")
-    .select("id, workout_date, title, details").eq("athlete_id", selectedAthleteId)
-    .order("workout_date", { ascending: false });
-  if (error) throw error;
-  workoutList.innerHTML = data.length ? data.map((workout) => `
-    <article class="workout-item">
-      <time datetime="${workout.workout_date}">${formatDate(workout.workout_date)}</time>
-      <h3>${escapeHtml(workout.title)}</h3>
-      <p>${escapeHtml(workout.details).replace(/\n/g, "<br>")}</p>
-    </article>`).join("") : '<p class="empty-state">No workouts have been assigned yet.</p>';
-}
-
-async function loadMessages() {
-  if (!selectedAthleteId) {
-    messageList.innerHTML = '<p class="empty-state">Select an athlete to open the conversation.</p>';
-    return;
-  }
-  const { data, error } = await supabaseClient.from("messages")
-    .select("id, sender_id, body, attachment_path, attachment_name, created_at")
-    .eq("athlete_id", selectedAthleteId).order("created_at", { ascending: true });
-  if (error) throw error;
-  const messages = await Promise.all(data.map(async (message) => {
-    if (!message.attachment_path) return message;
-    const { data: signed } = await supabaseClient.storage.from("portal-files").createSignedUrl(message.attachment_path, 3600);
-    return { ...message, attachmentUrl: signed?.signedUrl };
-  }));
-  messageList.innerHTML = messages.length ? messages.map((message) => {
-    const mine = message.sender_id === session.user.id;
-    const attachment = message.attachmentUrl
-      ? `<a class="message-attachment" href="${message.attachmentUrl}" target="_blank" rel="noopener">Open ${escapeHtml(message.attachment_name || "attachment")}</a>` : "";
-    return `<article class="message-item ${mine ? "is-mine" : ""}">
-      <p class="message-sender">${mine ? "You" : isCoach ? "Athlete" : "Coach"}</p>
-      ${message.body ? `<p>${escapeHtml(message.body).replace(/\n/g, "<br>")}</p>` : ""}${attachment}
-      <time datetime="${message.created_at}">${formatDate(message.created_at, true)}</time>
-    </article>`;
-  }).join("") : '<p class="empty-state">No messages yet. Start the conversation below.</p>';
-  messageList.scrollTop = messageList.scrollHeight;
-}
-
-async function refreshWorkspace() {
-  setStatus(dashboardStatus, "Loading athlete workspace…");
-  try {
-    const loaders = isGuardian
-      ? [loadBilling(), loadBillingAccess(), loadInvoices()]
-      : [loadProfile(), loadWorkouts(), loadMessages(), loadBilling(), loadBillingAccess(), loadInvoices()];
-    await Promise.all(loaders);
-    setStatus(dashboardStatus, "Workspace is up to date.", "success");
-  } catch (error) {
-    console.error("Workspace load error:", error);
-    setStatus(dashboardStatus, "We couldn't load portal data. Confirm the Supabase setup has been applied.", "error");
-  }
-}
-
-async function openStripeSession(functionName, button, loadingMessage) {
-  if (!session || isCoach) return;
-  button.disabled = true;
-  setStatus(dashboardStatus, loadingMessage);
-  try {
-    const { data, error } = await supabaseClient.functions.invoke(functionName, {
-      body: { athleteId: selectedAthleteId }
-    });
-    if (error) throw error;
-    if (!data?.url) throw new Error("Stripe did not return a redirect URL.");
-    window.location.assign(data.url);
-  } catch (error) {
-    console.error(`${functionName} error:`, error);
-    setStatus(dashboardStatus, "We couldn't open secure billing. Please try again or contact Odyssey.", "error");
-    button.disabled = false;
-  }
-}
-
-async function showDashboard(activeSession, version) {
-  session = activeSession;
-  setUserGreeting();
-  const { data: coachResult, error } = await supabaseClient.rpc("is_coach");
-  if (version !== authStateVersion) return;
-  if (error) {
-    console.error("Coach role check error:", error);
-    showAuthView(loginForm);
-    setStatus(authStatus, "Portal setup is incomplete. Ask an administrator to finish the database setup.", "error");
-    return;
-  }
-  isCoach = Boolean(coachResult);
-  isGuardian = false;
-  resetPortalRoleView();
-  authCard.hidden = true;
-  dashboard.hidden = false;
-  athletePicker.hidden = !isCoach;
-  workoutForm.hidden = !isCoach;
-  billingAccessForm.hidden = !isCoach;
-  draftInvoiceForm.hidden = !isCoach;
-  sendInvoiceForm.hidden = !isCoach;
-  profileForm.querySelector("button[type='submit']").hidden = isCoach;
-  Array.from(profileForm.elements).forEach((control) => {
-    if (control.tagName !== "BUTTON") control.disabled = isCoach;
-  });
-  if (isCoach) {
-    athletePicker.querySelector("label").textContent = "Viewing athlete";
-    await loadAthletes();
-  } else {
-    const { data: ownProfile, error: profileError } = await supabaseClient.from("athlete_profiles")
-      .select("id").eq("id", activeSession.user.id).maybeSingle();
-    if (profileError) throw profileError;
-    if (ownProfile) selectedAthleteId = activeSession.user.id;
-    else {
-      const { data: guardianLinks, error: guardianError } = await supabaseClient
-        .from("athlete_billing_authorizations").select("athlete_id");
-      if (guardianError) throw guardianError;
-      if (!guardianLinks.length) {
-        showAuthView(loginForm);
-        setStatus(authStatus, "This account has not been linked to an athlete or billing role.", "error");
-        return;
-      }
-      isGuardian = true;
-      document.querySelectorAll(".training-only").forEach((element) => { element.hidden = true; });
-      activatePortalTab(document.querySelector("[data-panel='billing-panel']"));
-      document.querySelector(".portal-dashboard-header h1").textContent = "Billing Portal";
-      document.querySelector(".portal-welcome").textContent = "Billing-only membership access.";
-      await loadGuardianAthletes();
-    }
-  }
-  await refreshWorkspace();
-  if (billingReturn === "success" || billingReturn === "canceled") {
-    setStatus(dashboardStatus, billingReturn === "success"
-      ? "Checkout complete. Membership status may take a few seconds to update."
-      : "Checkout canceled. No payment was made.", billingReturn === "success" ? "success" : "info");
-  }
-}
-
-async function applyAuthState(activeSession) {
-  const version = ++authStateVersion;
-  if (!activeSession) {
-    const errorMessage = authLinkError?.replace(/\+/g, " ");
-    showSignedOut(errorMessage || undefined, errorMessage ? "error" : "info");
-    return;
-  }
-  if (needsPasswordUpdate) {
-    session = activeSession;
-    showAuthView(passwordForm);
-    setStatus(authStatus, authFlowType === "invite"
-      ? "Invitation accepted. Create a password to finish setting up your account."
-      : "Enter a new password for your account.", "success");
-    return;
-  }
-  await showDashboard(activeSession, version);
-}
-
-supabaseClient.auth.onAuthStateChange((event, activeSession) => {
-  if (event === "PASSWORD_RECOVERY") needsPasswordUpdate = true;
-  if (event === "SIGNED_OUT") needsPasswordUpdate = false;
-  window.setTimeout(() => applyAuthState(activeSession), 0);
-});
-
-loginForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const form = new FormData(loginForm);
-  setFormBusy(loginForm, true);
-  setStatus(authStatus, "Signing you in…");
-  const { error } = await supabaseClient.auth.signInWithPassword({
-    email: form.get("email").trim().toLowerCase(),
-    password: form.get("password")
-  });
-  setFormBusy(loginForm, false);
-  if (error) {
-    console.error("Supabase sign-in error:", error);
-    const detail = error.code ? `${error.message} (${error.code})` : error.message;
-    setStatus(authStatus, detail || "Sign in failed. Check your email and password.", "error");
-  }
-  else loginForm.reset();
-});
-
-document.querySelector(".forgot-password-button").addEventListener("click", () => {
-  forgotForm.elements.email.value = loginForm.elements.email.value;
-  showAuthView(forgotForm);
-  setStatus(authStatus, "Enter your email and we'll send you a password reset link.");
-});
-document.querySelector(".back-to-login-button").addEventListener("click", () => {
-  showAuthView(loginForm);
-  setStatus(authStatus, "Sign in to access your training portal.");
-});
-
-forgotForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  setFormBusy(forgotForm, true);
-  const redirectTo = `${window.location.origin}${window.location.pathname}`;
-  const { error } = await supabaseClient.auth.resetPasswordForEmail(forgotForm.elements.email.value, { redirectTo });
-  setFormBusy(forgotForm, false);
-  if (error) setStatus(authStatus, "We couldn't send a reset link. Please try again.", "error");
-  else {
-    forgotForm.reset();
-    setStatus(authStatus, "If an account exists for that email, a reset link is on its way.", "success");
-  }
-});
-
-passwordForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const password = passwordForm.elements.password.value;
-  if (password !== passwordForm.elements.password_confirm.value) {
-    setStatus(authStatus, "The passwords do not match.", "error");
-    return;
-  }
-  setFormBusy(passwordForm, true);
-  const { error } = await supabaseClient.auth.updateUser({ password });
-  setFormBusy(passwordForm, false);
-  if (error) setStatus(authStatus, error.message || "We couldn't save your password.", "error");
-  else {
-    needsPasswordUpdate = false;
-    passwordForm.reset();
-    window.history.replaceState({}, document.title, window.location.pathname);
-    const { data } = await supabaseClient.auth.getSession();
-    await applyAuthState(data.session);
-  }
-});
-
-profileForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!session || isCoach) return;
-  const form = new FormData(profileForm);
-  setFormBusy(profileForm, true);
-  const { error } = await supabaseClient.from("athlete_profiles").upsert({
-    id: session.user.id, full_name: form.get("full_name"), age_group: form.get("age_group"),
-    primary_event: form.get("primary_event"), goals: form.get("goals")
-  }, { onConflict: "id" });
-  setFormBusy(profileForm, false);
-  setStatus(dashboardStatus, error ? "We couldn't save your profile." : "Your profile has been saved.", error ? "error" : "success");
-  if (!error) setUserGreeting(form.get("full_name"));
-});
-
-workoutForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!isCoach || !selectedAthleteId) return;
-  const form = new FormData(workoutForm);
-  setFormBusy(workoutForm, true);
-  const { error } = await supabaseClient.from("workouts").insert({
-    athlete_id: selectedAthleteId, coach_id: session.user.id, workout_date: form.get("workout_date"),
-    title: form.get("title"), details: form.get("details")
-  });
-  setFormBusy(workoutForm, false);
-  if (error) setStatus(dashboardStatus, "We couldn't assign that workout.", "error");
-  else { workoutForm.reset(); setStatus(dashboardStatus, "Workout assigned.", "success"); await loadWorkouts(); }
-});
-
-messageForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!session || !selectedAthleteId) return;
-  const body = messageForm.elements.body.value.trim();
-  const file = messageForm.elements.attachment.files[0];
-  if (!body && !file) return setStatus(dashboardStatus, "Write a message or add a file before sending.", "error");
-  if (file && file.size > 20 * 1024 * 1024) return setStatus(dashboardStatus, "That file is larger than 20 MB.", "error");
-  setFormBusy(messageForm, true);
-  let attachmentPath = null;
-  if (file) {
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
-    attachmentPath = `${selectedAthleteId}/${Date.now()}-${safeName}`;
-    const { error } = await supabaseClient.storage.from("portal-files").upload(attachmentPath, file, { contentType: file.type });
-    if (error) {
-      setFormBusy(messageForm, false);
-      return setStatus(dashboardStatus, "The file could not be uploaded.", "error");
-    }
-  }
-  const { error } = await supabaseClient.from("messages").insert({
-    athlete_id: selectedAthleteId, sender_id: session.user.id, body: body || null,
-    attachment_path: attachmentPath, attachment_name: file?.name || null, attachment_type: file?.type || null
-  });
-  setFormBusy(messageForm, false);
-  if (error) setStatus(dashboardStatus, "The message could not be sent.", "error");
-  else { messageForm.reset(); setStatus(dashboardStatus, "Message sent.", "success"); await loadMessages(); }
-});
-
-messageComposeButton.addEventListener("click", () => {
-  const opening = messageForm.hidden;
-  messageForm.hidden = !opening;
-  messageComposeButton.setAttribute("aria-expanded", String(opening));
-  messageComposeButton.textContent = opening ? "Close Message" : "Write a Message";
-  if (opening) {
-    messageForm.scrollIntoView({ behavior: "smooth", block: "center" });
-    window.setTimeout(() => messageForm.elements.body.focus(), 350);
-  }
-});
-
-messageForm.elements.body.addEventListener("keydown", (event) => {
-  if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
-  event.preventDefault();
-  messageForm.requestSubmit();
-});
-
-athleteSelect.addEventListener("change", async () => {
-  selectedAthleteId = athleteSelect.value || null;
-  draftInvoiceRequestId = null;
-  await refreshWorkspace();
-});
-portalTabs.forEach((tab) => {
-  tab.addEventListener("click", () => activatePortalTab(tab));
-  tab.addEventListener("keydown", (event) => {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-    const visibleTabs = portalTabs.filter((item) => !item.hidden);
-    const currentIndex = visibleTabs.indexOf(tab);
-    const nextIndex = event.key === "Home" ? 0
-      : event.key === "End" ? visibleTabs.length - 1
-      : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + visibleTabs.length) % visibleTabs.length;
-    event.preventDefault();
-    activatePortalTab(visibleTabs[nextIndex], { focus: true });
-  });
-});
-document.querySelector(".logout-button").addEventListener("click", async () => {
-  const { error } = await supabaseClient.auth.signOut();
-  if (error) setStatus(dashboardStatus, "We couldn't sign you out.", "error");
-});
-
-startMembershipButton.addEventListener("click", () => {
-  openStripeSession("create-checkout-session", startMembershipButton, "Opening secure checkout…");
-});
-manageBillingButton.addEventListener("click", () => {
-  openStripeSession("create-customer-portal-session", manageBillingButton, "Opening secure billing…");
-});
-
-manualApprovalCheckbox.addEventListener("change", () => {
-  manualApprovalNote.hidden = !manualApprovalCheckbox.checked;
-  billingAccessForm.elements.approval_note.required = manualApprovalCheckbox.checked;
-});
-
-billingAccessForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!isCoach || !selectedAthleteId) return;
-  setFormBusy(billingAccessForm, true);
-  setStatus(dashboardStatus, "Saving billing authorization…");
-  const { data, error } = await supabaseClient.functions.invoke("configure-billing-authorization", {
-    body: {
-      athleteId: selectedAthleteId,
-      dateOfBirth: billingAccessForm.elements.date_of_birth.value,
-      guardianEmail: billingAccessForm.elements.guardian_email.value,
-      manualApproved: manualApprovalCheckbox.checked,
-      approvalNote: billingAccessForm.elements.approval_note.value,
-      billingEnabled: billingEnabledCheckbox.checked,
-      billingEnabledNote: billingAccessForm.elements.billing_enabled_note.value
-    }
-  });
-  setFormBusy(billingAccessForm, false);
-  if (error) {
-    let message = "We couldn't save billing authorization.";
-    try { message = (await error.context?.json())?.error || message; } catch (_) { /* Keep safe fallback. */ }
-    setStatus(dashboardStatus, message, "error");
-    return;
-  }
-  billingAccessForm.elements.guardian_email.value = "";
-  setStatus(dashboardStatus, data?.requiresBillingMigration
-    ? "Authorization saved. Existing Stripe billing must be transferred manually before the new billing user can manage it."
-    : data?.minor ? "Minor billing authorization saved." : "Adult billing authorization saved.",
-  data?.requiresBillingMigration ? "error" : "success");
-  await loadBillingAccess();
-});
-
-draftInvoiceForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!isCoach || !selectedAthleteId) return;
-  const dollars = Number(draftInvoiceForm.elements.amount.value);
-  const amountCents = Math.round(dollars * 100);
-  if (!Number.isFinite(dollars) || Math.abs(amountCents / 100 - dollars) > 0.00001) {
-    return setStatus(dashboardStatus, "Enter a valid USD amount with no more than two decimal places.", "error");
-  }
-  setFormBusy(draftInvoiceForm, true);
-  setStatus(dashboardStatus, "Creating Stripe draft only…");
-  draftInvoiceRequestId ||= crypto.randomUUID();
-  const { data, error } = await supabaseClient.functions.invoke("create-draft-invoice", { body: {
-    athleteId: selectedAthleteId,
-    amountCents,
-    description: draftInvoiceForm.elements.description.value,
-    dueDate: draftInvoiceForm.elements.due_date.value,
-    requestId: draftInvoiceRequestId
-  } });
-  setFormBusy(draftInvoiceForm, false);
-  if (error) {
-    let message = "We couldn't create the draft invoice.";
-    try { message = (await error.context?.json())?.error || message; } catch (_) { /* Keep fallback. */ }
-    return setStatus(dashboardStatus, message, "error");
-  }
-  draftInvoiceRequestId = null;
-  draftInvoiceForm.reset();
-  sendInvoiceForm.elements.invoice_id.value = data.invoiceId;
-  setStatus(dashboardStatus, `Draft ${data.invoiceId} created. Review it before finalizing.`, "success");
-  await loadInvoices();
-});
-
-sendInvoiceForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!isCoach) return;
-  const invoiceId = sendInvoiceForm.elements.invoice_id.value.trim();
-  const confirmation = sendInvoiceForm.elements.confirmation.value.trim();
-  if (confirmation !== "FINALIZE_AND_SEND") {
-    return setStatus(dashboardStatus, "Type FINALIZE_AND_SEND exactly to confirm.", "error");
-  }
-  setFormBusy(sendInvoiceForm, true);
-  setStatus(dashboardStatus, `Finalizing and sending ${invoiceId}…`);
-  const { error } = await supabaseClient.functions.invoke("finalize-send-invoice", { body: {
-    invoiceId,
-    confirmation: { invoiceId, action: confirmation }
-  } });
-  setFormBusy(sendInvoiceForm, false);
-  if (error) {
-    let message = "We couldn't finalize and send that invoice.";
-    try { message = (await error.context?.json())?.error || message; } catch (_) { /* Keep fallback. */ }
-    return setStatus(dashboardStatus, message, "error");
-  }
-  sendInvoiceForm.reset();
-  setStatus(dashboardStatus, `${invoiceId} was finalized and sent.`, "success");
-  await loadInvoices();
-});
-
-if (billingReturn === "success" || billingReturn === "canceled") {
-  window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
-}
+  const renderSchedule=data=>{
+    const grid=e('div','portal-grid'),enabled=config?.enableSessionReservations===true,p=panel('Training schedule',enabled?'Reserve your training time':'Upcoming sessions',true),reserved=new Set(data.reservations.map(r=>r.session_id));
+    if(!enabled)p.append(e('p','portal-muted','Online reservations are not available yet. Contact your coach to confirm your training days.'));
+    if(!data.sessions.length)p.append(e('p','portal-muted','No upcoming sessions are currently listed.'));
+    data.sessions.forEach(s=>{
+      const card=record(s.title,`${fmt(s.starts_at,true)} · ${s.location}`);
+      if(enabled){const button=e('button','button secondary',reserved.has(s.id)?'Cancel reservation':'Reserve session');button.type='button';button.disabled=!reserved.has(s.id)&&s.reservation_status!=='open';button.addEventListener('click',async()=>{const reserve=button.textContent==='Reserve session';button.disabled=true;try{await adapter.reserveSession({sessionId:s.id,reserve});button.textContent=reserve?'Cancel reservation':'Reserve session'}catch{fail()}finally{button.disabled=button.textContent==='Reserve session'&&s.reservation_status!=='open'}});card.append(button)}
+      p.append(card);
+    });grid.append(p);content.replaceChildren(grid);
+  };
+  const renderProgress=data=>{const grid=e('div','portal-grid'),p=panel('Progress','Performance history',true);if(!data.performance.length)p.append(e('p','portal-muted','No approved results yet.'));data.performance.forEach(r=>{const name=r.performance_metric_definitions?.display_name||metricName(r.metric_code),unit=unitName(r.performance_metric_definitions?.unit);p.append(record(name,`${r.result_value}${unit?` ${unit}`:''} · ${fmt(r.measured_at)}`))});grid.append(p);content.replaceChildren(grid)};
+  const renderCoachHome=data=>{const grid=e('div','portal-grid'),athletes=panel('Your roster','Assigned athletes',true),inbox=panel('Messages','Unread'),review=panel('Results','Awaiting review');data.athletes.forEach(a=>athletes.append(record(a.displayName,'Active athlete')));inbox.append(e('strong','',String(data.inbox.length)));review.append(e('strong','',String(data.pendingResults.length)));grid.append(athletes,inbox,review);content.replaceChildren(grid)};
+  const addOptions=(select,items,valueKey,label)=>items.forEach(item=>{const option=e('option','',label(item));option.value=item[valueKey];select.append(option)});
+  const renderCoachAttendance=(data,p)=>{
+    data.sessions.forEach(session=>p.append(record(session.title,`${fmt(session.starts_at,true)} · ${session.location}`)));if(!data.sessions.length)p.append(e('p','portal-muted','No upcoming sessions.'));
+    if(!data.sessions.length||!data.athletes.length)return;
+    const form=e('form','portal-form');form.innerHTML='<h3>Record attendance</h3><div class="portal-form-row"><label>Session<select name="sessionId" required><option value="">Choose a session</option></select></label><label>Athlete<select name="athleteId" required><option value="">Choose an athlete</option></select></label></div><div class="portal-form-row"><label>Status<select name="status" required><option value="present">Present</option><option value="late">Late</option><option value="excused">Excused</option><option value="absent">Absent</option></select></label><label>Note<textarea name="note" rows="2" maxlength="1000"></textarea></label></div><div class="portal-actions"><button class="button primary" type="submit">Save attendance</button></div><p class="form-message" role="status"></p>';
+    addOptions(form.elements.sessionId,data.sessions,'id',session=>`${session.title} · ${fmt(session.starts_at,true)}`);addOptions(form.elements.athleteId,data.athletes,'athleteId',athlete=>athlete.displayName);
+    form.addEventListener('submit',async ev=>{ev.preventDefault();const msg=form.querySelector('.form-message');msg.textContent='';if(!form.reportValidity())return;const values=Object.fromEntries(new FormData(form));setFormBusy(form,true);try{await adapter.saveAttendance(values);msg.textContent='Attendance saved.'}catch{msg.textContent='We could not save attendance. Please try again.'}finally{setFormBusy(form,false)}});p.append(form);
+  };
+  const renderCoachAssignments=(data,p)=>{
+    const list=e('div','portal-list');
+    const appendPlan=(plan,atStart=false)=>{const card=record(plan.title,`${fmt(plan.planned_date)} · ${statusName(plan.status)}`);if(plan.status==='draft'){const actions=e('div','portal-actions'),publish=e('button','button secondary','Publish');publish.type='button';publish.addEventListener('click',async()=>{publish.disabled=true;try{await adapter.publishWorkout({planId:plan.id});plan.status='published';card.querySelector('span').textContent=`${fmt(plan.planned_date)} · Published`;publish.remove()}catch{publish.disabled=false;status.textContent='We could not publish that workout. Please try again.'}});actions.append(publish);card.append(actions)}list[atStart?'prepend':'append'](card)};
+    data.plans.forEach(plan=>appendPlan(plan));if(!data.plans.length)list.append(e('p','portal-muted','No training plans yet.'));p.append(list);
+    if(!data.athletes.length){p.append(e('p','portal-muted','An assigned athlete is required before creating a workout.'));return}
+    const form=e('form','portal-form');form.innerHTML='<h3>Create a workout draft</h3><div class="portal-form-row"><label>Athlete<select name="targetAthleteId" required><option value="">Choose an athlete</option></select></label><label>Workout date<input name="plannedDate" type="date" required></label></div><div class="portal-form-row"><label>Title<input name="title" maxlength="160" required></label><label>Training week<input name="trainingWeek" type="number" min="1" max="53" required></label></div><label>Training phase<input name="phase" maxlength="80" placeholder="Preparation" required></label><div class="portal-form-row"><label>Section heading<input name="heading" maxlength="120" placeholder="Main work" required></label><label>Exercise<input name="exercise" maxlength="160" required></label></div><div class="portal-form-row"><label>Sets<input name="sets" type="number" min="1" max="99"></label><label>Reps or distance<input name="reps" maxlength="80" placeholder="3 × 20m"></label></div><label>Rest between sets (seconds)<input name="restSeconds" type="number" min="0" max="3600"></label><div class="portal-actions"><button class="button primary" type="submit">Save draft</button></div><p class="form-message" role="status"></p>';
+    addOptions(form.elements.targetAthleteId,data.athletes,'athleteId',athlete=>athlete.displayName);
+    form.addEventListener('submit',async ev=>{ev.preventDefault();const msg=form.querySelector('.form-message'),values=Object.fromEntries(new FormData(form));msg.textContent='';if(!form.reportValidity())return;const item={exercise:values.exercise,reps:values.reps||null};if(values.sets)item.sets=Number(values.sets);if(values.restSeconds)item.rest_seconds=Number(values.restSeconds);setFormBusy(form,true);try{const created=await adapter.createWorkout({title:values.title,plannedDate:values.plannedDate,trainingWeek:Number(values.trainingWeek),phase:values.phase,targetAthleteId:values.targetAthleteId,sections:[{section_type:'main',heading:values.heading,items:[item]}]});appendPlan({...created,title:values.title,planned_date:values.plannedDate},true);form.reset();msg.textContent='Draft saved. Review it above when you are ready to publish.'}catch{msg.textContent='We could not save that workout. Check the details and try again.'}finally{setFormBusy(form,false)}});p.append(form);
+  };
+  const renderCoachPage=(data,page)=>{const grid=e('div','portal-grid'),p=panel(page==='Attendance'?'Session check-in':page==='Assignments'?'Training plans':'Athlete submissions',page,true);if(page==='Attendance')renderCoachAttendance(data,p);else if(page==='Assignments')renderCoachAssignments(data,p);else{data.pendingResults.forEach(r=>{const card=record(metricName(r.metric_code),`${r.result_value} · ${fmt(r.measured_at)}`),actions=e('div','portal-actions');[['Approve','approve'],['Return','reject']].forEach(([label,action])=>{const b=e('button',`button ${action==='approve'?'primary':'secondary'}`,label);b.type='button';b.addEventListener('click',async()=>{try{await adapter.reviewSubmission({resultId:r.id,action});card.remove()}catch{fail()}});actions.append(b)});card.append(actions);p.append(card)});if(!data.pendingResults.length)p.append(e('p','portal-muted','Nothing is waiting for review.'))}grid.append(p);content.replaceChildren(grid)};
+  const renderGuardian=data=>{const grid=e('div','portal-grid'),p=panel('Account access','Consent relationships',true);p.append(e('p','portal-muted',`${data.consentRelationships.length} active relationship${data.consentRelationships.length===1?'':'s'}.`));grid.append(p);content.replaceChildren(grid)};
+  const render=(role,page,data)=>{heading(role,page);buildNav(role);if(role==='athlete'){if(page==='Home')renderAthleteHome(data);else if(page==='Training')renderTraining(data);else if(page==='Messages')renderAthleteMessages(data);else if(page==='Schedule')renderSchedule(data);else renderProgress(data)}else if(role==='coach'){if(page==='Home')renderCoachHome(data);else if(page==='Messages')renderCoachMessages(data);else renderCoachPage(data,page)}else renderGuardian(data)};
+  const signedOut=()=>showAuthForm(authForm);
+  const signedIn=async(user,roles)=>{const role=singleRole(roles);if(!role){signedOut();authForm.querySelector('.form-message').textContent='Please contact Odyssey to confirm your portal access.';return}if(!enforce(role))return;await adapter.authorizeRoute({requiredRole:requested[0]});const data=await adapter.loadRole({role});render(role,requested[1],data);document.querySelector('#portal-account-email').textContent=user?.email||'';auth.hidden=true;app.hidden=false};
+  const signOut=async()=>{try{await adapter.signOut()}finally{location.replace(url(homePath))}};document.querySelector('#portal-sign-out')?.addEventListener('click',signOut);document.querySelector('#portal-app-sign-out')?.addEventListener('click',signOut);
+  authForm.addEventListener('submit',async ev=>{ev.preventDefault();const msg=authForm.querySelector('.form-message');msg.textContent='';if(!authForm.reportValidity())return;try{const result=await adapter.signIn(Object.fromEntries(new FormData(authForm)));await signedIn(result.user,result.roles)}catch{msg.textContent='We could not sign you in. Check your email and password, then try again.'}});
+  (async()=>{adapter=buildAdapter();if(!adapter){signedOut();authForm.querySelector('.form-message').textContent='The portal is temporarily unavailable.';return}try{const result=await adapter.initialize({resolveAccess:!passwordFlow});if(passwordFlow){if(result.signedIn)showPasswordForm();else{signedOut();authForm.querySelector('.form-message').textContent='This account link is no longer valid. Request a new password link to continue.'}}else if(result.signedIn)await signedIn(result.user,result.roles);else signedOut()}catch{signedOut();authForm.querySelector('.form-message').textContent='The portal is temporarily unavailable. Please try again shortly.'}})();
+})();
